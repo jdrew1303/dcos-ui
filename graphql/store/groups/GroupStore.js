@@ -1,6 +1,6 @@
 import ServiceUtil from '../../utils/ServiceUtil';
 
-export default class GroupsStore {
+export default class GroupStore {
   constructor({ endpoints }) {
     this.endpoints = endpoints;
     this.contentsById = new Map();
@@ -31,6 +31,8 @@ export default class GroupsStore {
       });
 
       const {resources, taskStatus} = this.parseApplications(group);
+      // simplify group by removing nested apps now they're parsed
+      delete group.apps;
 
       group.parentId = parentId;
       group.resources = resources;
@@ -41,12 +43,15 @@ export default class GroupsStore {
       group.groups.forEach((subGroup) => {
         traverseTree(subGroup, group.id);
       });
+
+      // simplify group by removing nested groups now they're parsed
+      delete group.groups;
     };
     // Traverse from root
     traverseTree(rootGroup);
 
     // Bubble values to top with bottom-up breadth-first
-    while(groups.length) {
+    while (groups.length) {
       const childGroup = groups.pop();
 
       if (childGroup.parentId) {
@@ -124,7 +129,13 @@ export default class GroupsStore {
 
   getById(id) {
     return this.getGroupsPromise().then(() => {
-      return this.contentsById.get(id);
+      const content = this.contentsById.get(id);
+
+      if (content == null) {
+        return null;
+      }
+
+      return content;
     });
   }
 

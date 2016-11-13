@@ -5,13 +5,17 @@ export default class TaskStore {
   }
 
   fetchTasks() {
-    const statePromise = this.endpoints.mesos.state.get()
-      .then((state) => this.parseState(state));
+    const groupsPromise = this.endpoints.marathon.groups.get();
+    const statePromise = this.endpoints.mesos.state.get();
 
-    const groupsPromise = this.endpoints.marathon.groups.get()
-      .then((group) => this.parseGroups(group));
-
-    this.tasksPromise = Promise.all([statePromise, groupsPromise]);
+    this.tasksPromise = Promise.all([statePromise, groupsPromise])
+      .then(([state, group]) => {
+        // Guarantee parsing order by waiting for both responses.
+        // getAll() will return order based on mesos ordering with
+        // 'tasks' first, then 'completed_tasks'
+        this.parseState(state);
+        this.parseGroups(group);
+      });
 
     return this.tasksPromise;
   }
@@ -47,7 +51,13 @@ export default class TaskStore {
 
   getById(id) {
     return this.getTasksPromise().then(() => {
-      return this.tasksById.get(id);
+      const task = this.tasksById.get(id);
+
+      if (task == null) {
+        return null;
+      }
+
+      return task;
     });
   }
 

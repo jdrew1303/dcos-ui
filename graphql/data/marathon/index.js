@@ -1,4 +1,4 @@
-import GroupsConnector from './groups';
+import GroupsConnector from './groups/group';
 
 export default function MarathonConnector(authToken) {
   return {
