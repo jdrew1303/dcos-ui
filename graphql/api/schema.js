@@ -1,4 +1,4 @@
-import Cluster from './cluster/schema';
+import Cluster from './cluster/ClusterSchema';
 
 const RootSchema = `
   schema {
@@ -6,7 +6,4 @@ const RootSchema = `
   }
 `;
 
-export default () => [
-  RootSchema,
-  Cluster
-];
+export default () => [RootSchema, Cluster];

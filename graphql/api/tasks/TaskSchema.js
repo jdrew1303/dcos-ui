@@ -1,6 +1,6 @@
-import Agents from '../agents/schema';
-import Status from '../../helpers/status/schema';
-import Pagination from '../../helpers/pagination/schema';
+import Agents from '../agents/AgentSchema';
+import Status from '../common/status/schema';
+import Pagination from '../common/pagination/schema';
 
 const Tasks = `
   # A Task

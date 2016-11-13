@@ -1171,7 +1171,14 @@
         "vinyl": {
           "version": "1.1.1",
           "from": "vinyl@>=1.0.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz"
+          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz",
+          "dependencies": {
+            "clone": {
+              "version": "1.0.2",
+              "from": "clone@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+            }
+          }
         }
       }
     },
@@ -1378,9 +1385,9 @@
       }
     },
     "clone": {
-      "version": "1.0.2",
-      "from": "clone@>=1.0.2 <2.0.0",
-      "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+      "version": "2.0.0",
+      "from": "clone@latest",
+      "resolved": "https://registry.npmjs.org/clone/-/clone-2.0.0.tgz"
     },
     "clone-regexp": {
       "version": "1.0.0",
@@ -1974,7 +1981,14 @@
         "vinyl": {
           "version": "1.1.1",
           "from": "vinyl@>=1.0.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz"
+          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz",
+          "dependencies": {
+            "clone": {
+              "version": "1.0.2",
+              "from": "clone@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+            }
+          }
         },
         "vinyl-fs": {
           "version": "2.4.3",
@@ -2087,7 +2101,14 @@
         "vinyl": {
           "version": "1.1.1",
           "from": "vinyl@>=1.0.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz"
+          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz",
+          "dependencies": {
+            "clone": {
+              "version": "1.0.2",
+              "from": "clone@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+            }
+          }
         }
       }
     },
@@ -2109,7 +2130,14 @@
     "defaults": {
       "version": "1.0.3",
       "from": "defaults@>=1.0.0 <2.0.0",
-      "resolved": "https://registry.npmjs.org/defaults/-/defaults-1.0.3.tgz"
+      "resolved": "https://registry.npmjs.org/defaults/-/defaults-1.0.3.tgz",
+      "dependencies": {
+        "clone": {
+          "version": "1.0.2",
+          "from": "clone@>=1.0.2 <2.0.0",
+          "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+        }
+      }
     },
     "defined": {
       "version": "1.0.0",
@@ -2338,7 +2366,14 @@
         "vinyl": {
           "version": "1.1.1",
           "from": "vinyl@>=1.0.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz"
+          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz",
+          "dependencies": {
+            "clone": {
+              "version": "1.0.2",
+              "from": "clone@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+            }
+          }
         },
         "vinyl-fs": {
           "version": "2.4.3",
@@ -4017,7 +4052,14 @@
         "vinyl": {
           "version": "1.1.1",
           "from": "vinyl@>=1.0.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz"
+          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz",
+          "dependencies": {
+            "clone": {
+              "version": "1.0.2",
+              "from": "clone@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+            }
+          }
         }
       }
     },
@@ -4034,7 +4076,14 @@
         "vinyl": {
           "version": "0.5.3",
           "from": "vinyl@>=0.5.0 <0.6.0",
-          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-0.5.3.tgz"
+          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-0.5.3.tgz",
+          "dependencies": {
+            "clone": {
+              "version": "1.0.2",
+              "from": "clone@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+            }
+          }
         }
       }
     },
@@ -4412,7 +4461,14 @@
         "vinyl": {
           "version": "1.1.1",
           "from": "vinyl@>=1.0.0 <2.0.0",
-          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz"
+          "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz",
+          "dependencies": {
+            "clone": {
+              "version": "1.0.2",
+              "from": "clone@>=1.0.0 <2.0.0",
+              "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+            }
+          }
         },
         "vinyl-fs": {
           "version": "2.4.3",
@@ -4837,7 +4893,14 @@
     "istanbul-api": {
       "version": "1.0.0-aplha.10",
       "from": "istanbul-api@>=1.0.0-aplha.10 <2.0.0",
-      "resolved": "https://registry.npmjs.org/istanbul-api/-/istanbul-api-1.0.0-aplha.10.tgz"
+      "resolved": "https://registry.npmjs.org/istanbul-api/-/istanbul-api-1.0.0-aplha.10.tgz",
+      "dependencies": {
+        "clone": {
+          "version": "1.0.2",
+          "from": "clone@>=1.0.2 <2.0.0",
+          "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+        }
+      }
     },
     "istanbul-lib-coverage": {
       "version": "1.0.0",
@@ -9231,7 +9294,14 @@
     "vinyl": {
       "version": "1.1.1",
       "from": "vinyl@1.1.1",
-      "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz"
+      "resolved": "https://registry.npmjs.org/vinyl/-/vinyl-1.1.1.tgz",
+      "dependencies": {
+        "clone": {
+          "version": "1.0.2",
+          "from": "clone@>=1.0.0 <2.0.0",
+          "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
+        }
+      }
     },
     "vinyl-assign": {
       "version": "1.2.1",
@@ -9375,6 +9445,11 @@
           "version": "3.6.0",
           "from": "buffer@>=3.0.3 <4.0.0",
           "resolved": "https://registry.npmjs.org/buffer/-/buffer-3.6.0.tgz"
+        },
+        "clone": {
+          "version": "1.0.2",
+          "from": "clone@>=1.0.2 <2.0.0",
+          "resolved": "https://registry.npmjs.org/clone/-/clone-1.0.2.tgz"
         },
         "constants-browserify": {
           "version": "0.0.1",

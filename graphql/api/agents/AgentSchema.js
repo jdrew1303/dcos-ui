@@ -1,5 +1,5 @@
-import Pagination from '../../helpers/pagination/schema';
-import Tasks from '../tasks/schema';
+import Pagination from '../common/pagination/schema';
+import Tasks from '../tasks/TaskSchema';
 
 const Agents = `
   # An agent in the cluster

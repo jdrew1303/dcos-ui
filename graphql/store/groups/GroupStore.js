@@ -39,7 +39,6 @@ export default class GroupStore {
       group.taskStatus = taskStatus;
 
       groups.push(group);
-
       group.groups.forEach((subGroup) => {
         traverseTree(subGroup, group.id);
       });

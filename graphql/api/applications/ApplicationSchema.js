@@ -1,4 +1,4 @@
-import Tasks from '../tasks/schema';
+import Tasks from '../tasks/TaskSchema';
 
 const Application = `
   # An Application

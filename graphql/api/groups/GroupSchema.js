@@ -1,8 +1,6 @@
-import Pagination from '../../helpers/pagination/schema';
-
-import Applications from '../applications/schema';
-import Frameworks from '../frameworks/schema';
-import Tasks from '../tasks/schema';
+import Applications from '../applications/ApplicationSchema';
+import Frameworks from '../frameworks/FrameworkSchema';
+import Tasks from '../tasks/TaskSchema';
 
 const Groups = `
   # Union which resolves to one of Group, Application or Framework

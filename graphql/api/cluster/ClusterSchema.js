@@ -1,7 +1,5 @@
-import Agents from '../agents/schema';
-import Groups from '../groups/schema';
-
-import { Paginate } from '../../utils/connections';
+import Agents from '../agents/AgentSchema';
+import Groups from '../groups/GroupSchema';
 
 const Cluster = `
   type Cluster {
