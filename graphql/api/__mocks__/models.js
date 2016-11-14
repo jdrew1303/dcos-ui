@@ -1,10 +1,10 @@
-import endpointsConnector from '../data/EndpointsConnector';
-import createStore from '../store';
+import endpointsConnector from '../../data/EndpointsConnector';
+import createStore from '../../store';
 
-import Agents from './agents/models';
-import Frameworks from './frameworks/models';
-import Groups from './groups/models';
-import Tasks from './tasks/models';
+import Agents from '../agents/AgentModels';
+import Frameworks from '../frameworks/FrameworkModels';
+import Groups from '../groups/GroupModels';
+import Tasks from '../tasks/TaskModels';
 
 export default function models(mockEndpointData) {
   const endpoints = endpointsConnector(mockEndpointData);
