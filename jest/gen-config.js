@@ -52,6 +52,8 @@ var config = {
     'node_modules/graphql-tools',
     'node_modules/graphql/store',
     'mixins/index',
+    'resolvers.js',
+    'schema.js',
     'src/js/config/',
     'src/js/constants',
     'src/js/plugin-bridge/AppReducer',
