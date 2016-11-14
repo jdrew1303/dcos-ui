@@ -5,5 +5,5 @@
 /schema/**
 /webpack/modules/**
 updateSchema.babel.js
-/graphql/**/mock-data/**
-/graphql/**/__tests__/**
+/query/**/mock-data/**
+/query/**/__tests__/**

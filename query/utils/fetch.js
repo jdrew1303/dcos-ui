@@ -1,5 +1,4 @@
 import rp from 'request-promise';
-import DataLoader from 'dataloader';
 import querystring from 'querystring';
 
 function mergeOptions(opts) {
@@ -42,7 +41,7 @@ export function fetch(urls, options={}) {
       rp(mergedOptions)
       .then((response) => resolve(response.body))
       .catch((err) => reject(err));
-    })
+    });
   });
 
   return Promise.all(promises);
@@ -55,11 +54,11 @@ export function fetch(urls, options={}) {
  * @return {function}           function that excepts array of urls to resolve
  */
 export function fetchWithAuth(authToken, options) {
-  return function(urls) {
+  return function (urls) {
     options.headers = Object.assign({}, options.headers || {}, {
       Cookie: authToken
     });
 
     return fetch(urls, options);
-  }
+  };
 }

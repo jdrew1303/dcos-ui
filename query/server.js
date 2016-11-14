@@ -15,7 +15,7 @@ if (process.env.GRAPHQL_ENV === 'development') {
   });
 }
 
-graphQLServer.use(function *(next) {
+graphQLServer.use(function* (next) {
   if (this.query && this.query.length > 2000) {
     // Probably indicates someone trying to send an overly expensive query
     throw new Error('Query too large.');

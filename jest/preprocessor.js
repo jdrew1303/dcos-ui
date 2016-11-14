@@ -30,7 +30,7 @@ module.exports = {
           retainLines: true,
         };
 
-        if (filename.indexOf('/graphql/') > -1) {
+        if (filename.indexOf('/query/') > -1) {
           babelSettings.plugins = ['babel-plugin-transform-async-to-generator'].map(require.resolve)
         }
         src = babel.transform(src, babelSettings).code;

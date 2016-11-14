@@ -3,7 +3,7 @@
  */
 var fs = require('fs');
 var path = require('path');
-var testPaths = ['src', 'plugins', 'foundation-ui', 'graphql'];
+var testPaths = ['src', 'plugins', 'foundation-ui', 'query'];
 
 if (process.env.npm_config_externalplugins) {
   testPaths.push(process.env.npm_config_externalplugins);
@@ -43,15 +43,17 @@ var config = {
     'deep-equal',
     'events',
     'flux',
+    'graphql',
+    'graphql-tools',
     'jasmine-reporters',
     'localStorage',
+    'lodash',
     'mesosphere-shared-reactjs',
     'moment',
     'md5',
-    'node_modules/graphql',
-    'node_modules/graphql-tools',
-    'node_modules/graphql/store',
     'mixins/index',
+    'query/api/index',
+    'query/store',
     'resolvers.js',
     'schema.js',
     'src/js/config/',

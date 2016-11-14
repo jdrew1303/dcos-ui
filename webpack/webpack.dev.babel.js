@@ -90,7 +90,7 @@ module.exports = Object.assign({}, webpackConfig, {
             'babel-preset-react'
           ].map(require.resolve),
           plugins: [
-            '../graphql/scripts/babelRelayPlugin'
+            '../query/scripts/babelRelayPlugin'
           ].map(require.resolve)
         })
       },
