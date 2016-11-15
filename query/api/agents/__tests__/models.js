@@ -1,6 +1,6 @@
-jest.unmock('../AgentModels');
+jest.unmock('../models');
 
-import Agents from '../AgentModels';
+import Agents from '../models';
 import createStore from '../../../store';
 import MockEndpointsConnector from '../../../data/EndpointsConnector';
 

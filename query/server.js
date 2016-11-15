@@ -3,7 +3,7 @@ import koa from 'koa';
 import graphQLHTTP from 'koa-graphql';
 import mount from 'koa-mount';
 
-import models from './api/models';
+import models from './api/allModels';
 import schema from './api';
 
 const GRAPHQL_PORT = 4000;
