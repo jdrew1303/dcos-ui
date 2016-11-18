@@ -6,6 +6,5 @@ module.exports = {
   // Container runtime is handled in ./serviceForm/Container
   cpus: simpleReducer('cpus', 0.01),
   mem: simpleReducer('mem', 128),
-  disk: simpleReducer('disk', 0),
-  cmd: simpleReducer('cmd')
+  disk: simpleReducer('disk', 0)
 };

@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import {Tooltip} from 'reactjs-components';
 
 import {FormReducer as ContainerReducer} from '../../reducers/serviceForm/Container';
+import {FormReducer as ContainersReducer} from '../../reducers/serviceForm/Containers';
 import AdvancedSection from '../../../../../../src/js/components/form/AdvancedSection';
 import AdvancedSectionContent from '../../../../../../src/js/components/form/AdvancedSectionContent';
 import AdvancedSectionLabel from '../../../../../../src/js/components/form/AdvancedSectionLabel';
@@ -28,20 +29,17 @@ const containerSettings = {
 
 class ContainerServiceFormSection extends Component {
   getAdvancedSettings(data = {}, errors = {}) {
-    let {container = {}} = data;
+    let {path} = this.props;
     let typeErrors = errors.container && errors.container.type;
     let selections = Object.keys(containerSettings).map((settingName, index) => {
       let {helpText, label} = containerSettings[settingName];
-      let checked = findNestedPropertyInObject(
-        container,
-        `docker.${settingName}`
-      );
+      let checked = findNestedPropertyInObject(data, `${path}.${settingName}`);
 
       return (
         <FieldLabel key={index}>
           <FieldInput
             checked={Boolean(checked)}
-            name={`container.docker.${settingName}`}
+            name={`${path}.${settingName}`}
             type="checkbox"
             value={settingName} />
           {label}
@@ -49,6 +47,8 @@ class ContainerServiceFormSection extends Component {
         </FieldLabel>
       );
     });
+
+    let diskErrors = findNestedPropertyInObject(errors, `${path}.resources.disk`);
 
     return (
       <AdvancedSectionContent>
@@ -58,13 +58,13 @@ class ContainerServiceFormSection extends Component {
         </FormGroup>
 
         <div className="flex row">
-          <FormGroup className="column-4" showError={Boolean(errors.disk)}>
+          <FormGroup className="column-4" showError={Boolean(diskErrors)}>
             <FieldLabel>Disk (MiB)</FieldLabel>
             <FieldInput
-              name="disk"
+              name={`${path}.resources.disk`}
               type="number"
-              value={data.disk} />
-            <FieldError>{errors.disk}</FieldError>
+              value={findNestedPropertyInObject(data, `${path}.resources.disk`)} />
+            <FieldError>{diskErrors}</FieldError>
           </FormGroup>
         </div>
       </AdvancedSectionContent>
@@ -126,14 +126,12 @@ class ContainerServiceFormSection extends Component {
   }
 
   render() {
-    let {data, errors} = this.props;
+    let {data, errors, path} = this.props;
 
-    let {container = {}} = data;
-    let image = findNestedPropertyInObject(container, 'docker.image');
-    let imageErrors = findNestedPropertyInObject(
-      errors,
-      'container.docker.image'
-    );
+    let imageErrors = findNestedPropertyInObject(errors, `${path}.image`);
+    let cpusErrors = findNestedPropertyInObject(errors, `${path}.resources.cpus`);
+    let memErrors = findNestedPropertyInObject(errors, `${path}.resources.mem`);
+    let commandErrors = findNestedPropertyInObject(errors, `${path}.exec.command`);
 
     return (
       <div>
@@ -145,50 +143,60 @@ class ContainerServiceFormSection extends Component {
           <FormGroup className="column-6" showError={Boolean(imageErrors)}>
             {this.getImageLabel()}
             <FieldInput
-              name="container.docker.image"
-              value={image} />
+              name={`${path}.image`}
+              value={findNestedPropertyInObject(data, `${path}.image`)} />
             <FieldHelp>
               Enter a Docker image you want to run, e.g. nginx.
             </FieldHelp>
-            <FieldError>{imageErrors}</FieldError>
+            <FieldError>
+              {imageErrors}
+            </FieldError>
           </FormGroup>
 
           <FormGroup
             className="column-3"
              required={true}
-             showError={Boolean(errors.cpus)}>
+             showError={Boolean(cpusErrors)}>
             <FieldLabel>
               CPUs
             </FieldLabel>
             <FieldInput
-              name="cpus"
+              name={`${path}.resources.cpus`}
               type="number"
               step="0.01"
-              value={data.cpus} />
-            <FieldError>{errors.cpus}</FieldError>
+              value={findNestedPropertyInObject(data, `${path}.resources.cpus`)} />
+            <FieldError>
+              {cpusErrors}
+            </FieldError>
           </FormGroup>
           <FormGroup
             className="column-3"
             required={true}
-            showError={Boolean(errors.mem)}>
+            showError={Boolean(memErrors)}>
             <FieldLabel>
               Memory (MiB)
             </FieldLabel>
             <FieldInput
-              name="mem"
+              name={`${path}.resources.mem`}
               type="number"
-              value={data.mem} />
-            <FieldError>{errors.mem}</FieldError>
+              value={findNestedPropertyInObject(data, `${path}.resources.mem`)} />
+            <FieldError>
+              {memErrors}
+            </FieldError>
           </FormGroup>
         </div>
 
-        <FormGroup showError={Boolean(errors.cmd)}>
+        <FormGroup showError={Boolean(commandErrors)}>
           {this.getCMDLabel()}
-          <FieldTextarea name="cmd" value={data.cmd} />
+          <FieldTextarea
+            name={`${path}.exec.command`}
+            value={findNestedPropertyInObject(data, `${path}.exec.command`)} />
           <FieldHelp>
             A shell command for your container to execute.
           </FieldHelp>
-          <FieldError>{errors.cmd}</FieldError>
+          <FieldError>
+            {commandErrors}
+          </FieldError>
         </FormGroup>
 
         <AdvancedSection>
@@ -204,16 +212,19 @@ class ContainerServiceFormSection extends Component {
 
 ContainerServiceFormSection.defaultProps = {
   data: {},
-  errors: {}
+  errors: {},
+  path: 'container.docker'
 };
 
 ContainerServiceFormSection.propTypes = {
   data: React.PropTypes.object,
-  errors: React.PropTypes.object
+  errors: React.PropTypes.object,
+  path: React.PropTypes.string
 };
 
 ContainerServiceFormSection.reducers = {
   container: ContainerReducer,
+  containers: ContainersReducer
 };
 
 module.exports = ContainerServiceFormSection;

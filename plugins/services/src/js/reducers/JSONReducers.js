@@ -17,7 +17,18 @@ module.exports = {
   cpus: simpleFloatReducer('cpus', 0.01),
   mem: simpleIntReducer('mem', 128),
   disk: simpleIntReducer('disk', 0),
-  cmd: simpleIntReducer('cmd'),
+  cmd(state, {type, path = [], value}) {
+    if (!path.includes('container')) {
+      return state;
+    }
+
+    const joinedPath = path.join('.');
+    if (type === SET && joinedPath === 'container.docker.exec.command') {
+      return value;
+    }
+
+    return state;
+  },
   env,
   labels
 };
