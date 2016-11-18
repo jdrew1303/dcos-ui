@@ -1,5 +1,5 @@
 import React, {Component} from 'react';
-import {Tooltip} from 'reactjs-components';
+import {Confirm, Tooltip} from 'reactjs-components';
 
 import AdvancedSection from '../../../../../../src/js/components/form/AdvancedSection';
 import AdvancedSectionContent from '../../../../../../src/js/components/form/AdvancedSectionContent';
@@ -11,12 +11,18 @@ import FieldInput from '../../../../../../src/js/components/form/FieldInput';
 import FieldLabel from '../../../../../../src/js/components/form/FieldLabel';
 import {findNestedPropertyInObject} from '../../../../../../src/js/utils/Util';
 import FormGroup from '../../../../../../src/js/components/form/FormGroup';
+import Pod from '../../structs/Pod';
 import MetadataStore from '../../../../../../src/js/stores/MetadataStore';
 import Icon from '../../../../../../src/js/components/Icon';
 import General from '../../reducers/serviceForm/General';
 import VolumeConstants from '../../constants/VolumeConstants';
 
 const {MESOS, DOCKER} = VolumeConstants.type;
+const METHODS_TO_BIND = [
+  'handleConvertToPod',
+  'handleCloseConvertToPodModal',
+  'handleOpenConvertToPodModal'
+];
 
 const containerRuntimes = {
   [MESOS]: {
@@ -30,8 +36,92 @@ const containerRuntimes = {
 };
 
 class GeneralServiceFormSection extends Component {
+  constructor() {
+    super(...arguments);
 
-  getRuntimeSelections(data = {}) {
+    this.state = {convertToPodModalOpen: false};
+
+    METHODS_TO_BIND.forEach((method) => {
+      this[method] = this[method].bind(this);
+    });
+  }
+
+  handleConvertToPod() {
+    this.props.onConvertToPod();
+    this.handleCloseConvertToPodModal();
+  }
+
+  handleCloseConvertToPodModal() {
+    this.setState({convertToPodModalOpen: false});
+  }
+
+  handleOpenConvertToPodModal() {
+    this.setState({convertToPodModalOpen: true});
+  }
+
+    let {service, isEdit} = this.props;
+
+    if (isEdit || service instanceof Pod) {
+      return null;
+    }
+
+    return (
+      <p>
+        Need to run a service with multiple containers?
+        <a onClick={this.handleOpenConvertToPodModal}>
+          Add another container
+        </a>.
+      </p>
+    );
+  }
+
+  getRuntimeSection() {
+    let {errors, service} = this.props;
+    if (service instanceof Pod) {
+      return null;
+    }
+
+    let typeErrors = findNestedPropertyInObject(errors, 'container.type');
+    let runtimeTooltipContent = (
+      <span>
+        {'You can run Docker containers with both container runtimes. The Universal Container Runtime is better supported in DC/OS. '}
+        <a
+          href={MetadataStore.buildDocsURI('/usage/containerizers/')}
+          target="_blank">
+          More information
+        </a>.
+      </span>
+    );
+
+    return (
+      <AdvancedSection>
+        <AdvancedSectionLabel>
+          Advanced Service Settings
+        </AdvancedSectionLabel>
+        <AdvancedSectionContent>
+          <h3 className="short-top short-bottom">
+            {'Container Runtime '}
+            <Tooltip
+              content={runtimeTooltipContent}
+              interactive={true}
+              maxWidth={300}
+              scrollContainer=".gm-scroll-view"
+              wrapText={true}>
+                <Icon color="grey" id="ring-question" size="mini" family="mini" />
+            </Tooltip>
+          </h3>
+          <p>The container runtime is responsible for running your service. We support the Mesos and Docker containerizers.</p>
+          <FormGroup showError={Boolean(typeErrors)}>
+            {this.getRuntimeSelections()}
+            <FieldError>{typeErrors}</FieldError>
+          </FormGroup>
+        </AdvancedSectionContent>
+      </AdvancedSection>
+    );
+  }
+
+  getRuntimeSelections() {
+    let {data = {}} = this.props;
     let {container = {}, cmd, gpus} = data;
     let isDisabled = {};
     let disabledTooltipContent;
@@ -96,15 +186,6 @@ class GeneralServiceFormSection extends Component {
 
   render() {
     let {data, errors} = this.props;
-    let typeErrors = findNestedPropertyInObject(errors, 'container.type');
-    let runtimeTooltipContent = (
-      <span>
-        {'You can run Docker containers with both container runtimes. The Universal Container Runtime is better supported in DC/OS. '}
-        <a href={MetadataStore.buildDocsURI('/usage/containerizers/')} target="_blank">
-          More information
-        </a>.
-      </span>
-    );
 
     return (
       <div className="form flush-bottom">
@@ -123,7 +204,7 @@ class GeneralServiceFormSection extends Component {
             required={true}
             showError={Boolean(errors.id)}>
             <FieldLabel>
-              Service Name
+              Service ID
             </FieldLabel>
             <FieldInput
               name="id"
@@ -148,31 +229,28 @@ class GeneralServiceFormSection extends Component {
           </FormGroup>
         </div>
 
-        <AdvancedSection>
-          <AdvancedSectionLabel>
-            Advanced Service Settings
-          </AdvancedSectionLabel>
-          <AdvancedSectionContent>
-            <h3 className="short-top short-bottom">
-              {'Container Runtime '}
-              <Tooltip
-                content={runtimeTooltipContent}
-                interactive={true}
-                maxWidth={300}
-                scrollContainer=".gm-scroll-view"
-                wrapText={true}>
-                  <Icon color="grey" id="ring-question" size="mini" family="mini" />
-              </Tooltip>
-            </h3>
-            <p>The container runtime is responsible for running your service. We support the Mesos and Docker containerizers.</p>
-            <FormGroup showError={Boolean(typeErrors)}>
-              {this.getRuntimeSelections(data)}
-              <FieldError>{typeErrors}</FieldError>
-            </FormGroup>
-          </AdvancedSectionContent>
-        </AdvancedSection>
 
+        {this.getRuntimeSection()}
         <ContainerServiceFormSection data={data} errors={errors} />
+        {this.getConvertToPodAction()}
+
+        <Confirm
+          closeByBackdropClick={true}
+          header="Switching to a pod service"
+          open={this.state.convertToPodModalOpen}
+          onClose={this.handleCloseConvertToPodModal}
+          leftButtonText="Close"
+          leftButtonCallback={this.handleCloseConvertToPodModal}
+          rightButtonText="Continue"
+          rightButtonClassName="button button-success"
+          rightButtonCallback={this.handleConvertToPod}
+          showHeader={true}>
+          <p>
+            {'Adding another container will automatically put multiple containers into a Pod definition. Your containers will be co-located on the same node and scale together. '}
+            <a href={MetadataStore.buildDocsURI('/usage/pods/')} target="_blank">More information</a>.
+          </p>
+          <p>Are you sure you would like to continue and create a Pod? Any data you have already entered will be lost.</p>
+        </Confirm>
       </div>
     );
   }

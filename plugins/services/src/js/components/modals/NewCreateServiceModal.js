@@ -237,34 +237,47 @@ class NewServiceFormModal extends Component {
   }
 
   getModalContent() {
+    let {
+      isJSONModeActive,
+      serviceConfig,
+      serviceFormActive,
+      serviceJsonActive,
+      servicePickerActive,
+      serviceReviewActive
+    } = this.state;
+
     // NOTE: Always prioritize review screen check
-    if (this.state.serviceReviewActive) {
+    if (serviceReviewActive) {
       return (
-        <ServiceConfigDisplay appConfig={this.state.serviceConfig} />
+        <ServiceConfigDisplay appConfig={serviceConfig} />
       );
     }
 
-    if (this.state.servicePickerActive) {
+    if (servicePickerActive) {
       return (
         <NewCreateServiceModalServicePicker
           onServiceSelect={this.handleServiceSelection} />
       );
     }
 
-    if (this.state.serviceFormActive) {
+    if (serviceFormActive) {
+      let {isEdit, onConvertToPod} = this.props;
+
       return (
         <NewCreateServiceModalForm
-          isJSONModeActive={this.state.isJSONModeActive}
-          service={this.state.serviceConfig}
+          isJSONModeActive={isJSONModeActive}
+          service={serviceConfig}
           onChange={this.handleServiceChange}
-          onErrorStateChange={this.handleServiceErrorChange} />
+          onConvertToPod={onConvertToPod}
+          onErrorStateChange={this.handleServiceErrorChange}
+          isEdit={isEdit}/>
       );
     }
 
-    if (this.state.serviceJsonActive) {
+    if (serviceJsonActive) {
       return (
         <CreateServiceJsonOnly
-          service={this.state.serviceConfig}
+          service={serviceConfig}
           onChange={this.handleServiceChange}
           onErrorStateChange={this.handleServiceErrorChange} />
       );

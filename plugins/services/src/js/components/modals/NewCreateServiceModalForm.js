@@ -16,6 +16,7 @@ import JSONReducers from '../../reducers/JSONReducers';
 import JSONParser from '../../reducers/JSONParser';
 import JSONEditor from '../../../../../../src/js/components/JSONEditor';
 import ServiceUtil from '../../utils/ServiceUtil';
+import Pod from '../../structs/Pod';
 import TabButton from '../../../../../../src/js/components/TabButton';
 import TabButtonList from '../../../../../../src/js/components/TabButtonList';
 import Tabs from '../../../../../../src/js/components/Tabs';
@@ -26,6 +27,7 @@ import TransactionTypes from '../../../../../../src/js/constants/TransactionType
 import DataValidatorUtil from '../../../../../../src/js/utils/DataValidatorUtil';
 
 const METHODS_TO_BIND = [
+  'handleConvertToPod',
   'handleFormChange',
   'handleFormBlur',
   'handleJSONChange',
@@ -56,11 +58,20 @@ class NewCreateServiceModalForm extends Component {
 
     let {service} = this.props;
     let batch = new Batch();
+    let isPod = service instanceof Pod;
     let formReducer = combineReducers(
       Object.assign({}, ...SECTIONS.map((item) => item.reducers))
     );
-    let jsonParser = combineParsers(JSONParser);
-    let jsonReducer = combineReducers(JSONReducers);
+    let jsonParser = combineParsers(JSONParser, {
+      cmd: !isPod,
+      container: !isPod,
+      containers: isPod
+    });
+    let jsonReducer = combineReducers(JSONReducers, {
+      cmd: !isPod,
+      container: !isPod,
+      containers: isPod
+    });
 
     this.state = Object.assign(
       {
@@ -118,15 +129,37 @@ class NewCreateServiceModalForm extends Component {
   componentWillReceiveProps(nextProps) {
     let prevJSON = ServiceUtil.getServiceJSON(this.props.service);
     let nextJSON = ServiceUtil.getServiceJSON(nextProps.service);
+    let nextState = {};
 
+    // Detect change from non-Pod to Pod
+    if (isPod && !(this.props.service instanceof Pod)) {
+      nextState.formReducer = combineReducers(
+          Object.assign({}, ...SECTIONS.map((item) => item.reducers))
+      );
+      nextState.jsonParser = combineParsers(JSONParser, {
+        cmd: !isPod,
+        container: !isPod,
+        containers: isPod
+      });
+      nextState.jsonReducer = combineReducers(JSONReducers, {
+        cmd: !isPod,
+        container: !isPod,
+        containers: isPod
+      });
+    }
     // Note: We ignore changes that might derrive from the `onChange` event
     //       handler. In that case the contents of nextJSON would be the same
     //       as the contents of the last rendered appConfig in the state.
     if (!deepEqual(prevJSON, nextJSON) &&
         !deepEqual(this.state.appConfig, nextJSON)) {
       console.log('Updating because service changed');
-      this.setState(this.getNewStateForJSON(nextJSON));
+      nextState = Object.assign({},nextState, this.getNewStateForJSON(nextJSON));
     }
+    this.setState(nextState);
+  }
+
+  handleConvertToPod() {
+    this.props.onConvertToPod(this.getAppConfig());
   }
 
   /**
@@ -302,7 +335,12 @@ class NewCreateServiceModalForm extends Component {
               <TabViewList>
                 <TabView id="services">
                   {rootErrorComponent}
-                  <GeneralServiceFormSection errors={errorMap} data={data} />
+                  <GeneralServiceFormSection
+                    errors={errors}
+                    data={data}
+                    isEdit={isEdit}
+                    onConvertToPod={onConvertToPod}
+                    service={service} />
                 </TabView>
                 <TabView id="environment">
                   {rootErrorComponent}
