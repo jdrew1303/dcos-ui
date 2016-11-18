@@ -11,6 +11,7 @@ import EnvironmentFormSection from '../forms/EnvironmentFormSection';
 import GeneralServiceFormSection from '../forms/GeneralServiceFormSection';
 import JSONReducers from '../../reducers/JSONReducers';
 import JSONParser from '../../reducers/JSONParser';
+import Pod from '../../structs/Pod';
 import Service from '../../structs/Service';
 import TabButton from '../../../../../../src/js/components/TabButton';
 import TabButtonList from '../../../../../../src/js/components/TabButtonList';
@@ -22,6 +23,7 @@ import TransactionTypes from '../../../../../../src/js/constants/TransactionType
 import DataValidatorUtil from '../../../../../../src/js/utils/DataValidatorUtil';
 
 const METHODS_TO_BIND = [
+  'handleConvertToPod',
   'handleFormChange',
   'handleFormBlur',
   'handleJSONBlur',
@@ -42,10 +44,20 @@ class NewCreateServiceModalForm extends Component {
 
     let {service} = this.props;
     let batch = new Batch();
+    let isPod = service instanceof Pod;
+    let formReducer = combineReducers(
       Object.assign({}, ...SECTIONS.map((item) => item.reducers))
     );
-    let jsonParser = combineParsers(JSONParser);
-    let jsonReducer = combineReducers(JSONReducers);
+    let jsonParser = combineParsers(JSONParser, {
+      cmd: !isPod,
+      container: !isPod,
+      containers: isPod
+    });
+    let jsonReducer = combineReducers(JSONReducers, {
+      cmd: !isPod,
+      container: !isPod,
+      containers: isPod
+    });
 
     // Turn service configuration into Batch Transactions
     if (service) {
@@ -72,23 +84,39 @@ class NewCreateServiceModalForm extends Component {
   componentWillReceiveProps(nextProps) {
     let {service} = nextProps;
     let batch = new Batch();
-    if (service && this.props.service !== service) {
+    let isPod = service instanceof Pod;
+    // Detect change from non-Pod to Pod
+    if (isPod && !(this.props.service instanceof Pod)) {
       let formReducer = combineReducers(
         Object.assign({}, ...SECTIONS.map((item) => item.reducers))
       );
-      let jsonParser = combineParsers(JSONParser);
-      let jsonReducer = combineReducers(JSONReducers);
+      let jsonParser = combineParsers(JSONParser, {
+        cmd: !isPod,
+        container: !isPod,
+        containers: isPod
+      });
+      let jsonReducer = combineReducers(JSONReducers, {
+        cmd: !isPod,
+        container: !isPod,
+        containers: isPod
+      });
 
       // Turn current configuration into Batch Transactions
       jsonParser(service.toJSON()).forEach((item) => {
         batch.add(item);
       });
 
+      // Let's store the new batch and not add anything from old batch, since
+      // we have received a new service (Pod), which have received the
+      // full configuration so far
       this.setState({appConfig: {}, batch, formReducer, jsonParser, jsonReducer});
     }
   }
 
   handleConvertToPod() {
+    this.props.onConvertToPod(this.getAppConfig());
+  }
+
   handleJSONBlur() {
     let {errors, jsonParser, jsonValue} = this.state;
     let newState = {};
@@ -235,7 +263,12 @@ class NewCreateServiceModalForm extends Component {
               </TabButtonList>
               <TabViewList>
                 <TabView id="services">
-                  <GeneralServiceFormSection errors={errors} data={data} />
+                  <GeneralServiceFormSection
+                    errors={errors}
+                    data={data}
+                    isEdit={isEdit}
+                    onConvertToPod={onConvertToPod}
+                    service={service} />
                 </TabView>
                 <TabView id="environment">
                   <EnvironmentFormSection
