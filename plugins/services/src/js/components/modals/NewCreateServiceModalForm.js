@@ -9,8 +9,8 @@ import {combineParsers} from '../../../../../../src/js/utils/ParserUtil';
 import {combineReducers} from '../../../../../../src/js/utils/ReducerUtil';
 import EnvironmentFormSection from '../forms/EnvironmentFormSection';
 import GeneralServiceFormSection from '../forms/GeneralServiceFormSection';
-import JSONConfigReducers from '../../reducers/JSONConfigReducers';
-import JSONParserReducers from '../../reducers/JSONParserReducers';
+import JSONReducers from '../../reducers/JSONReducers';
+import JSONParser from '../../reducers/JSONParser';
 import Service from '../../structs/Service';
 import TabButton from '../../../../../../src/js/components/TabButton';
 import TabButtonList from '../../../../../../src/js/components/TabButtonList';
@@ -36,21 +36,20 @@ const SECTIONS = [
   GeneralServiceFormSection
 ];
 
-const jsonParserReducers = combineParsers(JSONParserReducers);
-const jsonConfigReducers = combineReducers(JSONConfigReducers);
-const inputConfigReducers = combineReducers(
-  Object.assign({}, ...SECTIONS.map((item) => item.configReducers))
-);
-
 class NewCreateServiceModalForm extends Component {
   constructor() {
     super(...arguments);
 
+    let {service} = this.props;
     let batch = new Batch();
+      Object.assign({}, ...SECTIONS.map((item) => item.reducers))
+    );
+    let jsonParser = combineParsers(JSONParser);
+    let jsonReducer = combineReducers(JSONReducers);
 
     // Turn service configuration into Batch Transactions
-    if (this.props.service) {
-      jsonParserReducers(this.props.service.toJSON()).forEach((item) => {
+    if (service) {
+      jsonParser(service.toJSON()).forEach((item) => {
         batch.add(item);
       });
     }
@@ -59,7 +58,10 @@ class NewCreateServiceModalForm extends Component {
       appConfig: {},
       batch,
       errors: {},
-      jsonValue: JSON.stringify(batch.reduce(jsonConfigReducers, {}), null, 2)
+      formReducer,
+      jsonParser,
+      jsonReducer,
+      jsonValue: JSON.stringify(batch.reduce(jsonReducer, {}), null, 2)
     };
 
     METHODS_TO_BIND.forEach((method) => {
@@ -67,8 +69,28 @@ class NewCreateServiceModalForm extends Component {
     });
   }
 
+  componentWillReceiveProps(nextProps) {
+    let {service} = nextProps;
+    let batch = new Batch();
+    if (service && this.props.service !== service) {
+      let formReducer = combineReducers(
+        Object.assign({}, ...SECTIONS.map((item) => item.reducers))
+      );
+      let jsonParser = combineParsers(JSONParser);
+      let jsonReducer = combineReducers(JSONReducers);
+
+      // Turn current configuration into Batch Transactions
+      jsonParser(service.toJSON()).forEach((item) => {
+        batch.add(item);
+      });
+
+      this.setState({appConfig: {}, batch, formReducer, jsonParser, jsonReducer});
+    }
+  }
+
+  handleConvertToPod() {
   handleJSONBlur() {
-    let {errors, jsonValue} = this.state;
+    let {errors, jsonParser, jsonValue} = this.state;
     let newState = {};
     let appConfig;
 
@@ -93,7 +115,7 @@ class NewCreateServiceModalForm extends Component {
       let errors = DataValidatorUtil.errorArrayToMap( errorList );
 
       // Translate appConfig to batch transactions
-      jsonParserReducers(appConfig).forEach((item) => {
+      jsonParser(appConfig).forEach((item) => {
         batch.add(item);
       });
 
@@ -117,7 +139,7 @@ class NewCreateServiceModalForm extends Component {
     if (parsedData) {
       let batch = new Batch();
       let appConfig = {};
-      jsonParserReducers(parsedData).forEach((item) => {
+      this.state.jsonParser(parsedData).forEach((item) => {
         batch.add(item);
       });
       Object.assign(newState, {batch, appConfig});
@@ -143,7 +165,7 @@ class NewCreateServiceModalForm extends Component {
   }
 
   handleFormChange(event) {
-    let {batch, appConfig} = this.state;
+    let {appConfig, batch, jsonReducer} = this.state;
 
     let value = event.target.value;
     if (event.target.type === 'checkbox') {
@@ -156,7 +178,7 @@ class NewCreateServiceModalForm extends Component {
     // Only update the jsonValue if we have a valid value
     if (event.target.validity.valid) {
       newState.jsonValue = JSON.stringify(
-        batch.reduce(jsonConfigReducers, appConfig),
+        batch.reduce(jsonReducer, appConfig),
         null,
         2
       );
@@ -165,18 +187,12 @@ class NewCreateServiceModalForm extends Component {
     this.setState(newState);
   }
 
-  getAppConfig() {
-    let {appConfig, batch} = this.state;
-
-    return batch.reduce(jsonConfigReducers, appConfig);
-  }
-
   handleAddItem({value, path}) {
-    let {appConfig, batch} = this.state;
+    let {appConfig, batch, jsonReducer} = this.state;
     batch.add(new Transaction(path.split(','), value, TransactionTypes.ADD_ITEM));
 
     // Update JSON data
-    let jsonValue = JSON.stringify(batch.reduce(jsonConfigReducers, appConfig), null, 2);
+    let jsonValue = JSON.stringify(batch.reduce(jsonReducer, appConfig), null, 2);
     this.setState({batch, jsonValue});
   }
 
@@ -185,14 +201,20 @@ class NewCreateServiceModalForm extends Component {
     batch.add(new Transaction(path.split(','), value, TransactionTypes.REMOVE_ITEM));
 
     // Update JSON data
-    let jsonValue = JSON.stringify(batch.reduce(jsonConfigReducers, appConfig), null, 2);
+    let jsonValue = JSON.stringify(batch.reduce(jsonReducer, appConfig), null, 2);
     this.setState({batch, jsonValue});
   }
 
+  getAppConfig() {
+    let {appConfig, batch, jsonReducer} = this.state;
+
+    return batch.reduce(jsonReducer, appConfig);
+  }
+
   render() {
-    let {appConfig, batch, errors, jsonValue} = this.state;
-    let {isJSONModeActive} = this.props;
-    let data = batch.reduce(inputConfigReducers, appConfig);
+    let {appConfig, batch, errors, formReducer, jsonValue} = this.state;
+    let {isJSONModeActive, isEdit, onConvertToPod, service} = this.props;
+    let data = batch.reduce(formReducer, appConfig);
 
     let jsonEditorPlaceholderClasses = classNames(
       'modal-full-screen-side-panel-placeholder',

@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {Tooltip} from 'reactjs-components';
 
-import {FormReducer} from '../../reducers/serviceForm/Container';
+import {FormReducer as ContainerReducer} from '../../reducers/serviceForm/Container';
 import AdvancedSection from '../../../../../../src/js/components/form/AdvancedSection';
 import AdvancedSectionContent from '../../../../../../src/js/components/form/AdvancedSectionContent';
 import AdvancedSectionLabel from '../../../../../../src/js/components/form/AdvancedSectionLabel';
@@ -212,8 +212,8 @@ ContainerServiceFormSection.propTypes = {
   errors: React.PropTypes.object
 };
 
-ContainerServiceFormSection.configReducers = {
-  container: FormReducer
+ContainerServiceFormSection.reducers = {
+  container: ContainerReducer,
 };
 
 module.exports = ContainerServiceFormSection;
