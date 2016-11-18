@@ -159,7 +159,7 @@ EnvironmentFormSection.propTypes = {
   onRemoveItem: React.PropTypes.func
 };
 
-EnvironmentFormSection.configReducers = {
+EnvironmentFormSection.reducers = {
   env,
   labels
 };

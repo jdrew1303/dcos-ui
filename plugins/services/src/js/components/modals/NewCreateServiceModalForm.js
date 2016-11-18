@@ -12,8 +12,8 @@ import {combineReducers} from '../../../../../../src/js/utils/ReducerUtil';
 import EnvironmentFormSection from '../forms/EnvironmentFormSection';
 import GeneralServiceFormSection from '../forms/GeneralServiceFormSection';
 import HealthChecksFormSection from '../forms/HealthChecksFormSection';
-import JSONConfigReducers from '../../reducers/JSONReducers';
-import JSONParserReducers from '../../reducers/JSONParser';
+import JSONReducers from '../../reducers/JSONReducers';
+import JSONParser from '../../reducers/JSONParser';
 import JSONEditor from '../../../../../../src/js/components/JSONEditor';
 import ServiceUtil from '../../utils/ServiceUtil';
 import TabButton from '../../../../../../src/js/components/TabButton';
@@ -44,22 +44,33 @@ const ERROR_VALIDATORS = [
   AppValidators.App
 ];
 
-const jsonParserReducers = combineParsers(JSONParserReducers);
-const jsonConfigReducers = combineReducers(JSONConfigReducers);
-const inputConfigReducers = combineReducers(
-  Object.assign({}, ...SECTIONS.map((item) => item.configReducers))
-);
+// const jsonParserReducers = combineParsers(JSONParserReducers);
+// const jsonConfigReducers = combineReducers(JSONConfigReducers);
+// const inputConfigReducers = combineReducers(
+//   Object.assign({}, ...SECTIONS.map((item) => item.configReducers))
+// );
 
 class NewCreateServiceModalForm extends Component {
   constructor() {
     super(...arguments);
+
+    let {service} = this.props;
+    let batch = new Batch();
+    let formReducer = combineReducers(
+      Object.assign({}, ...SECTIONS.map((item) => item.reducers))
+    );
+    let jsonParser = combineParsers(JSONParser);
+    let jsonReducer = combineReducers(JSONReducers);
 
     this.state = Object.assign(
       {
         batch: new Batch(),
         baseConfig: {},
         appConfig: null,
-        errorList: []
+        errorList: [],
+        formReducer,
+        jsonParser,
+        jsonReducer
       },
       this.getNewStateForJSON(
         CreateServiceModalFormUtil.stripEmptyProperties(
@@ -69,6 +80,30 @@ class NewCreateServiceModalForm extends Component {
       )
     );
 
+    // Turn service configuration into Batch Transactions
+    if (service) {
+      jsonParser(service.toJSON()).forEach((item) => {
+        batch.add(item);
+      });
+    }
+
+    this.state = Object.assign(
+      {
+        appConfig: null,
+        batch,
+        errors: {},
+        formReducer,
+        jsonParser,
+        jsonReducer,
+        jsonValue: JSON.stringify(batch.reduce(jsonReducer, {}), null, 2)
+      },
+      this.getNewStateForJSON(
+          CreateServiceModalFormUtil.stripEmptyProperties(
+              getServiceJSON(this.props.service)
+          ),
+          false
+      )
+    );
     // Render initial app config
     this.state.appConfig = this.getAppConfig(this.state);
 
@@ -197,8 +232,8 @@ class NewCreateServiceModalForm extends Component {
   }
 
   getAppConfig(currentState = this.state) {
-    let {baseConfig, batch} = currentState;
-    let patch = batch.reduce(jsonConfigReducers, {});
+    let {baseConfig, batch, jsonReducers} = currentState;
+    let patch = batch.reduce(jsonReducers, {});
     return CreateServiceModalFormUtil.applyPatch(baseConfig, patch);
   }
 
@@ -239,9 +274,9 @@ class NewCreateServiceModalForm extends Component {
   }
 
   render() {
-    let {appConfig, batch, errorList} = this.state;
-    let {isJSONModeActive} = this.props;
-    let data = batch.reduce(inputConfigReducers, {});
+    let {appConfig, batch, errorList, formReducer} = this.state;
+    let {isJSONModeActive, isEdit, onConvertToPod, service} = this.props;
+    let data = batch.reduce(formReducer, {});
 
     let jsonEditorPlaceholderClasses = classNames(
       'modal-full-screen-side-panel-placeholder',

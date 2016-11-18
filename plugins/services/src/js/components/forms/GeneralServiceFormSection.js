@@ -188,6 +188,6 @@ GeneralServiceFormSection.propTypes = {
   errors: React.PropTypes.object
 };
 
-GeneralServiceFormSection.configReducers = General;
+GeneralServiceFormSection.reducers = General;
 
 module.exports = GeneralServiceFormSection;
