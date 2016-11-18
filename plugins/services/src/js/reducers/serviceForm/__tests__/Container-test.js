@@ -7,8 +7,17 @@ describe('Container', function () {
 
   describe('#JSONReducer', function () {
 
+    it('should pass state through if container is not in path', function () {
+      let batch = new Batch();
+      batch.add(new Transaction(['foo'], undefined, SET));
+
+      expect(batch.reduce(Container.JSONReducer.bind({}), {}))
+        .toEqual({});
+    });
+
     it('should return a mesos container as default object', function () {
       let batch = new Batch();
+      batch.add(new Transaction(['container'], undefined, SET));
 
       expect(batch.reduce(Container.JSONReducer.bind({}), {}))
         .toEqual({type: 'MESOS'});

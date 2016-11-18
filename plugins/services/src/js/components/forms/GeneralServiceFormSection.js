@@ -59,6 +59,35 @@ class GeneralServiceFormSection extends Component {
     this.setState({convertToPodModalOpen: true});
   }
 
+  getContainerSection() {
+    let {data = {}, errors} = this.props;
+    let {containers = [], container} = data;
+
+    if (!(this.props.service instanceof Pod)) {
+      return (
+        <ContainerServiceFormSection
+          path="container.docker"
+          data={container}
+          errors={errors.container} />
+      );
+    }
+
+    // TODO: This could maybe work as the same section, maybe not.
+    // We need to make a decition here, whether to re-use or
+    // just create a separate section
+    return containers.map((item, index) => {
+      let itemErrors = errors && errors.containers[item];
+
+      return (
+        <ContainerServiceFormSection
+          path={`containers.${index}`}
+          data={item}
+          errors={itemErrors} />
+      );
+    });
+  }
+
+  getConvertToPodAction() {
     let {service, isEdit} = this.props;
 
     if (isEdit || service instanceof Pod) {
@@ -229,9 +258,8 @@ class GeneralServiceFormSection extends Component {
           </FormGroup>
         </div>
 
-
         {this.getRuntimeSection()}
-        <ContainerServiceFormSection data={data} errors={errors} />
+        {this.getContainerSection()}
         {this.getConvertToPodAction()}
 
         <Confirm
