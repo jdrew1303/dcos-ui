@@ -11,6 +11,7 @@ import EnvironmentFormSection from '../forms/EnvironmentFormSection';
 import GeneralServiceFormSection from '../forms/GeneralServiceFormSection';
 import JSONConfigReducers from '../../reducers/JSONConfigReducers';
 import JSONParserReducers from '../../reducers/JSONParserReducers';
+import NetworkingFormSection from '../forms/NetworkingFormSection';
 import Service from '../../structs/Service';
 import TabButton from '../../../../../../src/js/components/TabButton';
 import TabButtonList from '../../../../../../src/js/components/TabButtonList';
@@ -33,7 +34,8 @@ const METHODS_TO_BIND = [
 const SECTIONS = [
   ContainerServiceFormSection,
   EnvironmentFormSection,
-  GeneralServiceFormSection
+  GeneralServiceFormSection,
+  NetworkingFormSection
 ];
 
 const jsonParserReducers = combineParsers(JSONParserReducers);
@@ -171,7 +173,9 @@ class NewCreateServiceModalForm extends Component {
     return batch.reduce(jsonConfigReducers, appConfig);
   }
 
-  handleAddItem({value, path}) {
+  handleAddItem({value, path}, event) {
+    event.preventDefault();
+
     let {appConfig, batch} = this.state;
     batch.add(new Transaction(path.split(','), value, TransactionTypes.ADD_ITEM));
 
@@ -209,11 +213,18 @@ class NewCreateServiceModalForm extends Component {
             <Tabs vertical={true}>
               <TabButtonList>
                 <TabButton id="services" label="Services" />
+                <TabButton id="networking" label="Networking" />
                 <TabButton id="environment" label="Environment" />
               </TabButtonList>
               <TabViewList>
                 <TabView id="services">
                   <GeneralServiceFormSection errors={errors} data={data} />
+                </TabView>
+                <TabView id="networking">
+                  <NetworkingFormSection
+                    data={data}
+                    onRemoveItem={this.handleRemoveItem}
+                    onAddItem={this.handleAddItem} />
                 </TabView>
                 <TabView id="environment">
                   <EnvironmentFormSection
