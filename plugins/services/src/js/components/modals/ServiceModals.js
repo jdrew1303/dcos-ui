@@ -30,10 +30,10 @@ class ServiceModals extends React.Component {
     });
   }
 
-  handleConvertToPod(appConfig) {
+  handleConvertToPod() {
     // TODO: Create a function, e.g. ServiceUtil.podSpecFromApplicationSpec
     // to create a pod spec from an application spec
-    this.setState({serviceToCreate: new Pod(appConfig)});
+    this.setState({serviceToCreate: new Pod()});
   }
 
   getGroupModal() {
@@ -91,7 +91,7 @@ class ServiceModals extends React.Component {
     // the modal is actually opened
     let {serviceToCreate} = this.state;
     if (!serviceToCreate) {
-      serviceToCreate =new Application(
+      serviceToCreate = new Application(
           Object.assign(
               {id: baseId},
               NEW_APP_DEFAULTS

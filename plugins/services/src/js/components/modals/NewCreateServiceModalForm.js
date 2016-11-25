@@ -32,7 +32,8 @@ const METHODS_TO_BIND = [
   'handleFormBlur',
   'handleJSONChange',
   'handleAddItem',
-  'handleRemoveItem'
+  'handleRemoveItem',
+  'getNewStateForJSON'
 ];
 
 const SECTIONS = [
@@ -73,6 +74,12 @@ class NewCreateServiceModalForm extends Component {
       containers: isPod
     });
 
+    // Turn service configuration into Batch Transactions
+    if (service) {
+      jsonParser(service.toJSON()).forEach((item) => {
+        batch.add(item);
+      });
+    }
     this.state = Object.assign(
       {
         batch: new Batch(),
@@ -90,31 +97,6 @@ class NewCreateServiceModalForm extends Component {
         false
       )
     );
-
-    // Turn service configuration into Batch Transactions
-    if (service) {
-      jsonParser(service.toJSON()).forEach((item) => {
-        batch.add(item);
-      });
-    }
-
-    this.state = Object.assign(
-      {
-        appConfig: null,
-        batch,
-        errors: {},
-        formReducer,
-        jsonParser,
-        jsonReducer,
-        jsonValue: JSON.stringify(batch.reduce(jsonReducer, {}), null, 2)
-      },
-      this.getNewStateForJSON(
-          CreateServiceModalFormUtil.stripEmptyProperties(
-              getServiceJSON(this.props.service)
-          ),
-          false
-      )
-    );
     // Render initial app config
     this.state.appConfig = this.getAppConfig(this.state);
 
@@ -129,7 +111,9 @@ class NewCreateServiceModalForm extends Component {
   componentWillReceiveProps(nextProps) {
     let prevJSON = ServiceUtil.getServiceJSON(this.props.service);
     let nextJSON = ServiceUtil.getServiceJSON(nextProps.service);
+    let {service} = nextProps;
     let nextState = {};
+    let isPod = service instanceof Pod;
 
     // Detect change from non-Pod to Pod
     if (isPod && !(this.props.service instanceof Pod)) {
@@ -153,7 +137,7 @@ class NewCreateServiceModalForm extends Component {
     if (!deepEqual(prevJSON, nextJSON) &&
         !deepEqual(this.state.appConfig, nextJSON)) {
       console.log('Updating because service changed');
-      nextState = Object.assign({},nextState, this.getNewStateForJSON(nextJSON));
+      nextState = Object.assign({}, nextState, this.getNewStateForJSON(nextJSON));
     }
     this.setState(nextState);
   }
@@ -205,12 +189,19 @@ class NewCreateServiceModalForm extends Component {
       baseConfig
     };
 
-    // Regenerate batch
-    newState.batch = jsonParserReducers(baseConfig).reduce((batch, item) => {
-      return batch.add(item);
-    }, new Batch());
+    // debugger;
+    newState.batch = new Batch();
+
+    if (this.state != null) {
+      let {jsonParser} = this.state;
+      // Regenerate batch
+      newState.batch = jsonParser(baseConfig).reduce((batch, item) => {
+        return batch.add(item);
+      }, new Batch());
+    }
 
     // Perform error validation
+    newState.errorList = [];
     if (validate) {
       newState.errorList = DataValidatorUtil.validate(baseConfig, ERROR_VALIDATORS);
     }
@@ -265,8 +256,9 @@ class NewCreateServiceModalForm extends Component {
   }
 
   getAppConfig(currentState = this.state) {
-    let {baseConfig, batch, jsonReducers} = currentState;
-    let patch = batch.reduce(jsonReducers, {});
+    let {baseConfig, batch} = currentState;
+    let {jsonReducer} = this.state;
+    let patch = batch.reduce(jsonReducer, {});
     return CreateServiceModalFormUtil.applyPatch(baseConfig, patch);
   }
 
@@ -336,7 +328,7 @@ class NewCreateServiceModalForm extends Component {
                 <TabView id="services">
                   {rootErrorComponent}
                   <GeneralServiceFormSection
-                    errors={errors}
+                    errors={errorMap}
                     data={data}
                     isEdit={isEdit}
                     onConvertToPod={onConvertToPod}
