@@ -16,7 +16,7 @@ describe('Containers', function () {
 
     it('returns an array as default with a container path Transaction', function () {
       let batch = new Batch();
-      batch.add(new Transaction(['containers'], null, SET));
+      batch = batch.add(new Transaction(['containers'], null, SET));
 
       expect(batch.reduce(Containers.JSONReducer.bind({})))
         .toEqual([]);

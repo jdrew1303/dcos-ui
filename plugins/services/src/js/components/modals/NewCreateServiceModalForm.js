@@ -1,18 +1,19 @@
-import Ace from 'react-ace';
 import classNames from 'classnames';
 import React, {PropTypes, Component} from 'react';
+import deepEqual from 'deep-equal';
 
+import Alert from '../../../../../../src/js/components/Alert';
 import AppValidators from '../../../../../../src/resources/raml/marathon/v2/types/app.raml';
+import CreateServiceModalFormUtil from '../../utils/CreateServiceModalFormUtil';
 import Batch from '../../../../../../src/js/structs/Batch';
 import ContainerServiceFormSection from '../forms/ContainerServiceFormSection';
 import {combineParsers} from '../../../../../../src/js/utils/ParserUtil';
 import {combineReducers} from '../../../../../../src/js/utils/ReducerUtil';
 import EnvironmentFormSection from '../forms/EnvironmentFormSection';
 import GeneralServiceFormSection from '../forms/GeneralServiceFormSection';
-import JSONReducers from '../../reducers/JSONReducers';
-import JSONParser from '../../reducers/JSONParser';
 import Pod from '../../structs/Pod';
-import Service from '../../structs/Service';
+import HealthChecksFormSection from '../forms/HealthChecksFormSection';
+import JSONEditor from '../../../../../../src/js/components/JSONEditor';
 import TabButton from '../../../../../../src/js/components/TabButton';
 import TabButtonList from '../../../../../../src/js/components/TabButtonList';
 import Tabs from '../../../../../../src/js/components/Tabs';
@@ -26,7 +27,6 @@ const METHODS_TO_BIND = [
   'handleConvertToPod',
   'handleFormChange',
   'handleFormBlur',
-  'handleJSONBlur',
   'handleJSONChange',
   'handleAddItem',
   'handleRemoveItem'
@@ -35,16 +35,113 @@ const METHODS_TO_BIND = [
 const SECTIONS = [
   ContainerServiceFormSection,
   EnvironmentFormSection,
-  GeneralServiceFormSection
+  GeneralServiceFormSection,
+  HealthChecksFormSection
 ];
+
+const ERROR_VALIDATORS = [
+  AppValidators.App
+];
+
+function getServiceJSON(service) {
+  if (!service) {
+    return {};
+  }
+
+  if (service.toJSON !== undefined) {
+    return service.toJSON();
+  }
+
+  return service;
+}
 
 class NewCreateServiceModalForm extends Component {
   constructor() {
     super(...arguments);
 
-    let {service} = this.props;
-    let batch = new Batch();
-    let isPod = service instanceof Pod;
+    this.state = Object.assign(
+      {
+        baseConfig: {},
+        batch,
+        errorList: [],
+        formReducer() {},
+        isPod: false,
+        jsonParser() {},
+        jsonReducer() {}
+      },
+      this.getNewStateForJSON(
+        CreateServiceModalFormUtil.stripEmptyProperties(
+          getServiceJSON(this.props.service)
+        ),
+        this.props.service instanceof Pod,
+        false
+      )
+    );
+
+    // Render initial app config
+    this.state.appConfig = this.getAppConfig(this.state);
+
+    METHODS_TO_BIND.forEach((method) => {
+      this[method] = this[method].bind(this);
+    });
+  }
+
+  /**
+   * @override
+   */
+  componentWillReceiveProps(nextProps) {
+    let prevJSON = getServiceJSON(this.props.service);
+    let nextJSON = getServiceJSON(nextProps.service);
+    let isPod = nextProps.service instanceof Pod;
+
+    // Note: We ignore changes that might derrive from the `onChange` event
+    //       handler. In that case the contents of nextJSON would be the same
+    //       as the contents of the last rendered appConfig in the state.
+    if (!deepEqual(prevJSON, nextJSON) &&
+        !deepEqual(this.state.appConfig, nextJSON)) {
+      console.log('Updating because service changed');
+      this.setState(this.getNewStateForJSON(nextJSON, isPod));
+    }
+  }
+
+  /**
+   * @override
+   */
+  componentDidUpdate() {
+    this.props.onChange(this.state.appConfig);
+    this.props.onErrorStateChange(this.state.errorList.length !== 0);
+  }
+
+  /**
+   * @override
+   */
+  shouldComponentUpdate(nextProps, nextState) {
+    // Update if json state changed
+    if (this.props.isJSONModeActive !== nextProps.isJSONModeActive) {
+      return true;
+    }
+
+    // Update if service property has changed
+    //
+    // Note: We ignore changes that might derrive from the `onChange` event
+    //       handler. In that case the contents of nextJSON would be the same
+    //       as the contents of the last rendered appConfig in the state.
+    //
+    let prevJSON = getServiceJSON(this.props.service);
+    let nextJSON = getServiceJSON(nextProps.service);
+    if (!deepEqual(prevJSON, nextJSON) &&
+        !deepEqual(this.state.appConfig, nextJSON)) {
+      console.log('Will update because service changed');
+      return true;
+    };
+
+    // Otherwise update if the state has changed
+    return (this.state.errorList !== nextState.errorList) ||
+           (this.state.baseConfig !== nextState.baseConfig) ||
+           (this.state.batch !== nextState.batch);
+  }
+
+  getNewStateForJSON(baseConfig={}, isPod=this.state.isPod, validate=true) {
     let formReducer = combineReducers(
       Object.assign({}, ...SECTIONS.map((item) => item.reducers))
     );
@@ -58,179 +155,118 @@ class NewCreateServiceModalForm extends Component {
       container: !isPod,
       containers: isPod
     });
-
-    // Turn service configuration into Batch Transactions
-    if (service) {
-      jsonParser(service.toJSON()).forEach((item) => {
-        batch.add(item);
-      });
-    }
-
-    this.state = {
+    let newState = {
       appConfig: {},
-      batch,
-      errors: {},
+      baseConfig,
       formReducer,
+      isPod,
       jsonParser,
-      jsonReducer,
-      jsonValue: JSON.stringify(batch.reduce(jsonReducer, {}), null, 2)
+      jsonReducer
     };
 
-    METHODS_TO_BIND.forEach((method) => {
-      this[method] = this[method].bind(this);
-    });
-  }
+    // Regenerate batch
+    newState.batch = jsonParser(baseConfig).reduce((batch, item) => {
+      return batch.add(item);
+    }, new Batch());
 
-  componentWillReceiveProps(nextProps) {
-    let {service} = nextProps;
-    let batch = new Batch();
-    let isPod = service instanceof Pod;
-    // Detect change from non-Pod to Pod
-    if (isPod && !(this.props.service instanceof Pod)) {
-      let formReducer = combineReducers(
-        Object.assign({}, ...SECTIONS.map((item) => item.reducers))
-      );
-      let jsonParser = combineParsers(JSONParser, {
-        cmd: !isPod,
-        container: !isPod,
-        containers: isPod
-      });
-      let jsonReducer = combineReducers(JSONReducers, {
-        cmd: !isPod,
-        container: !isPod,
-        containers: isPod
-      });
-
-      // Turn current configuration into Batch Transactions
-      jsonParser(service.toJSON()).forEach((item) => {
-        batch.add(item);
-      });
-
-      // Let's store the new batch and not add anything from old batch, since
-      // we have received a new service (Pod), which have received the
-      // full configuration so far
-      this.setState({appConfig: {}, batch, formReducer, jsonParser, jsonReducer});
+    // Perform error validation
+    if (validate) {
+      newState.errorList = DataValidatorUtil.validate(baseConfig, ERROR_VALIDATORS);
     }
+
+    return newState;
   }
 
   handleConvertToPod() {
     this.props.onConvertToPod(this.getAppConfig());
   }
 
-  handleJSONBlur() {
-    let {errors, jsonParser, jsonValue} = this.state;
-    let newState = {};
-    let appConfig;
-
-    try {
-      appConfig = JSON.parse(jsonValue);
-    } catch (event) {
-      // TODO: handle error
-      newState.errors = Object.assign(errors, {
-        jsonEditor: 'JSON value is not valid json.'
-      });
-    }
-
-    if (appConfig) {
-      // Flush batch
-      let batch = new Batch();
-
-      // Run data validation on the raw data
-      let errorList = DataValidatorUtil.validate(appConfig, [
-        AppValidators.App
-      ]);
-
-      let errors = DataValidatorUtil.errorArrayToMap( errorList );
-
-      // Translate appConfig to batch transactions
-      jsonParser(appConfig).forEach((item) => {
-        batch.add(item);
-      });
-
-      // Update batch, errors and appConfig
-      Object.assign(newState, {batch, errors, appConfig: {}});
-    }
-
+  handleJSONChange(jsonObject) {
+    let newState = this.getNewStateForJSON(jsonObject);
+    newState.appConfig = this.getAppConfig(newState);
     this.setState(newState);
   }
 
-  handleJSONChange(jsonValue) {
-    let newState = {jsonValue};
-    let parsedData;
-
-    try {
-      parsedData = JSON.parse(jsonValue);
-    } catch (event) {
-      // Not valid json, let's wait with firing event for new data
-    }
-
-    if (parsedData) {
-      let batch = new Batch();
-      let appConfig = {};
-      this.state.jsonParser(parsedData).forEach((item) => {
-        batch.add(item);
-      });
-      Object.assign(newState, {batch, appConfig});
-    }
-
-    this.setState(newState);
-  }
-
-  handleFormBlur() {
-    // Create temporary finalized appConfig
+  handleFormBlur(event) {
+    let path = event.target.getAttribute('name').split('.');
     let appConfig = this.getAppConfig();
+    let errorList = DataValidatorUtil.validate(
+      appConfig,
+      ERROR_VALIDATORS
+    );
+
+    // Keep errors only for this field
+    errorList = DataValidatorUtil.updateOnlyOnPath(this.state.errorList, errorList, path);
 
     // Run data validation on the raw data
-    let errorList = DataValidatorUtil.validate(appConfig, [
-      AppValidators.App
-    ]);
-
-    let errors = DataValidatorUtil.errorArrayToMap( errorList );
-
-    // Create new jsonValue
-    let jsonValue = JSON.stringify(appConfig, null, 2);
-    this.setState({errors, jsonValue});
+    this.setState({errorList, appConfig});
   }
 
   handleFormChange(event) {
-    let {appConfig, batch, jsonReducer} = this.state;
+    let {batch, baseConfig} = this.state;
 
     let value = event.target.value;
     if (event.target.type === 'checkbox') {
       value = event.target.checked;
     }
-    let path = event.target.getAttribute('name');
-    batch.add(new Transaction(path.split('.'), value));
+    let path = event.target.getAttribute('name').split('.');
+    batch = batch.add(new Transaction(path, value));
     let newState = {batch};
 
-    // Only update the jsonValue if we have a valid value
-    if (event.target.validity.valid) {
-      newState.jsonValue = JSON.stringify(
-        batch.reduce(jsonReducer, appConfig),
-        null,
-        2
-      );
-    }
+    // [Case F1] Reset errors only on the current field
+    newState.errorList = DataValidatorUtil.stripErrorsOnPath(
+      this.state.errorList,
+      path
+    );
+
+    // Render the new appconfig
+    newState.appConfig = this.getAppConfig({
+      batch, baseConfig
+    });
 
     this.setState(newState);
   }
 
-  handleAddItem({value, path}) {
-    let {appConfig, batch, jsonReducer} = this.state;
-    batch.add(new Transaction(path.split(','), value, TransactionTypes.ADD_ITEM));
+  getAppConfig(currentState = this.state) {
+    let {baseConfig, batch, jsonReducer} = currentState;
+    let patch = batch.reduce(jsonReducer, {});
+    return CreateServiceModalFormUtil.applyPatch(baseConfig, patch);
+  }
 
-    // Update JSON data
-    let jsonValue = JSON.stringify(batch.reduce(jsonReducer, appConfig), null, 2);
-    this.setState({batch, jsonValue});
+  handleAddItem({value, path}) {
+    let {batch} = this.state;
+    this.setState({
+      batch: batch.add(
+        new Transaction(path.split('.'), value, TransactionTypes.ADD_ITEM)
+      )
+    });
   }
 
   handleRemoveItem({value, path}) {
-    let {appConfig, batch} = this.state;
-    batch.add(new Transaction(path.split(','), value, TransactionTypes.REMOVE_ITEM));
+    let {batch} = this.state;
+    this.setState({
+      batch: batch.add(
+        new Transaction(path.split('.'), value, TransactionTypes.REMOVE_ITEM)
+      )
+    });
+  }
 
-    // Update JSON data
-    let jsonValue = JSON.stringify(batch.reduce(jsonReducer, appConfig), null, 2);
-    this.setState({batch, jsonValue});
+  getRootErrorMessage() {
+    let rootErrors = this.state.errorList.reduce(function (errors, error) {
+      if (error.path.length !== 0) {
+        return errors;
+      }
+
+      errors.push(<Alert>{error.message}</Alert>);
+
+      return errors;
+    }, []);
+
+    if (rootErrors.length === 0) {
+      return null;
+    }
+
+    return rootErrors;
   }
 
   getAppConfig() {
@@ -240,9 +276,9 @@ class NewCreateServiceModalForm extends Component {
   }
 
   render() {
-    let {appConfig, batch, errors, formReducer, jsonValue} = this.state;
-    let {isJSONModeActive, isEdit, onConvertToPod, service} = this.props;
-    let data = batch.reduce(formReducer, appConfig);
+    let {appConfig, batch, errorList, formReducer} = this.state;
+    let {isJSONModeActive, isEdit, onConvertToPod} = this.props;
+    let data = batch.reduce(formReducer, {});
 
     let jsonEditorPlaceholderClasses = classNames(
       'modal-full-screen-side-panel-placeholder',
@@ -252,6 +288,9 @@ class NewCreateServiceModalForm extends Component {
       'is-visible': isJSONModeActive
     });
 
+    let errorMap = DataValidatorUtil.errorArrayToMap( errorList );
+    let rootErrorComponent = this.getRootErrorMessage();
+
     return (
       <div className="flex flex-item-grow-1">
         <div className="container flex flex-direction-top-to-bottom">
@@ -260,19 +299,27 @@ class NewCreateServiceModalForm extends Component {
               <TabButtonList>
                 <TabButton id="services" label="Services" />
                 <TabButton id="environment" label="Environment" />
+                <TabButton id="healthChecks" label="Health Checks" />
               </TabButtonList>
               <TabViewList>
                 <TabView id="services">
+                  {rootErrorComponent}
                   <GeneralServiceFormSection
-                    errors={errors}
+                    errors={errorMap}
                     data={data}
                     isEdit={isEdit}
                     onConvertToPod={onConvertToPod}
                     service={service} />
                 </TabView>
                 <TabView id="environment">
+                  {rootErrorComponent}
                   <EnvironmentFormSection
                     data={data}
+                    onRemoveItem={this.handleRemoveItem}
+                    onAddItem={this.handleAddItem} />
+                </TabView>
+                <TabView id="healthChecks">
+                  <HealthChecksFormSection data={data}
                     onRemoveItem={this.handleRemoveItem}
                     onAddItem={this.handleAddItem} />
                 </TabView>
@@ -282,16 +329,14 @@ class NewCreateServiceModalForm extends Component {
         </div>
         <div className={jsonEditorPlaceholderClasses} />
         <div className={jsonEditorClasses}>
-          <Ace
-            editorProps={{$blockScrolling: true}}
-            mode="json"
-            onBlur={this.handleJSONBlur}
+          <JSONEditor
+            errors={errorList}
             onChange={this.handleJSONChange}
             showGutter={true}
             showPrintMargin={false}
             theme="monokai"
             height="100%"
-            value={jsonValue}
+            value={appConfig}
             width="100%" />
         </div>
       </div>
@@ -300,12 +345,16 @@ class NewCreateServiceModalForm extends Component {
 }
 
 NewCreateServiceModalForm.defaultProps = {
-  onChange() {}
+  isJSONModeActive: false,
+  onChange() {},
+  onErrorStateChange() {}
 };
 
 NewCreateServiceModalForm.propTypes = {
+  isJSONModeActive: PropTypes.bool,
   onChange: PropTypes.func,
-  service: PropTypes.instanceOf(Service)
+  onErrorStateChange: PropTypes.func,
+  service: PropTypes.object
 };
 
 module.exports = NewCreateServiceModalForm;

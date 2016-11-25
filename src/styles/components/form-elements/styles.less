@@ -7,6 +7,12 @@
     }
   }
 
+  .form-control-input-height {
+    align-items: center;
+    display: flex;
+    height: @form-control-height;
+  }
+
   .form-control-group-add-on {
     white-space: nowrap;
 
@@ -33,5 +39,21 @@
     bottom: 0.8rem;
     left: 100%;
     position: absolute;
+  }
+
+  .form-remove {
+    position: absolute;
+    right: 0;
+    top: 0;
+  }
+}
+
+& when (@grid-enabled) and (@layout-screen-large-enabled) {
+
+  @media (min-width: @layout-screen-large-min-width) {
+
+    .form-control-input-height {
+      height: @form-control-height-screen-large;
+    }
   }
 }

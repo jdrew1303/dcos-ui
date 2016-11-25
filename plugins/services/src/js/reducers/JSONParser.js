@@ -1,6 +1,7 @@
 import {simpleParser} from '../../../../../src/js/utils/ParserUtil';
 import {JSONParser as environmentVariables} from './serviceForm/EnvironmentVariables';
 import {JSONParser as labels} from './serviceForm/Labels';
+import {JSONParser as healthChecks} from './serviceForm/HealthChecks';
 import VolumeConstants from '../constants/VolumeConstants';
 
 const {DOCKER} = VolumeConstants.type;
@@ -17,5 +18,6 @@ module.exports = [
   simpleParser(['disk']),
   simpleParser(['cmd']),
   environmentVariables,
-  labels
+  labels,
+  healthChecks
 ];

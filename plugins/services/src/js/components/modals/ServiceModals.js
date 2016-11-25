@@ -8,6 +8,7 @@ import ServiceTree from '../../structs/ServiceTree';
 import ServiceActionItem from '../../constants/ServiceActionItem';
 import ServiceDestroyModal from './ServiceDestroyModal';
 import NewCreateServiceModal from './NewCreateServiceModal';
+import {NEW_APP_DEFAULTS} from '../../constants/NewApplicationDefaults';
 import ServiceGroupFormModal from './ServiceGroupFormModal';
 import ServiceRestartModal from './ServiceRestartModal';
 import ServiceScaleFormModal from './ServiceScaleFormModal';
@@ -90,7 +91,12 @@ class ServiceModals extends React.Component {
     // the modal is actually opened
     let {serviceToCreate} = this.state;
     if (!serviceToCreate) {
-      serviceToCreate = new Application({id: baseId});
+      serviceToCreate = new Application(
+        Object.assign(
+          {id: baseId},
+          NEW_APP_DEFAULTS
+        )
+      );
     }
 
     return (
