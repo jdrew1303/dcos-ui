@@ -54,6 +54,10 @@ const ERROR_VALIDATORS = [
 //   Object.assign({}, ...SECTIONS.map((item) => item.configReducers))
 // );
 
+const FORM_REDUCER = combineReducers(
+    Object.assign({}, ...SECTIONS.map((item) => item.reducers))
+);
+
 class NewCreateServiceModalForm extends Component {
   constructor() {
     super(...arguments);
@@ -61,9 +65,6 @@ class NewCreateServiceModalForm extends Component {
     let {service} = this.props;
     let batch = new Batch();
     let isPod = service instanceof Pod;
-    let formReducer = combineReducers(
-      Object.assign({}, ...SECTIONS.map((item) => item.reducers))
-    );
     let jsonParser = combineParsers(JSONParser, {
       cmd: !isPod,
       container: !isPod,
@@ -87,9 +88,8 @@ class NewCreateServiceModalForm extends Component {
         baseConfig: {},
         appConfig: null,
         errorList: [],
-        formReducer,
-        jsonParser,
-        jsonReducer
+        jsonReducer,
+        jsonParser
       },
       this.getNewStateForJSON(
         CreateServiceModalFormUtil.stripEmptyProperties(
@@ -118,9 +118,6 @@ class NewCreateServiceModalForm extends Component {
 
     // Detect change from non-Pod to Pod
     if (isPod && !(this.props.service instanceof Pod)) {
-      nextState.formReducer = combineReducers(
-          Object.assign({}, ...SECTIONS.map((item) => item.reducers))
-      );
       nextState.jsonParser = combineParsers(JSONParser, {
         cmd: !isPod,
         container: !isPod,
@@ -332,9 +329,9 @@ class NewCreateServiceModalForm extends Component {
   }
 
   render() {
-    let {appConfig, batch, errorList, formReducer} = this.state;
+    let {appConfig, batch, errorList} = this.state;
     let {isJSONModeActive, isEdit, onConvertToPod, service} = this.props;
-    let data = batch.reduce(formReducer, {});
+    let data = batch.reduce(FORM_REDUCER, {});
 
     let jsonEditorPlaceholderClasses = classNames(
       'modal-full-screen-side-panel-placeholder',
