@@ -34,10 +34,16 @@ module.exports = {
     let searchPath = path.join('.');
 
     return function (state) {
-      return new Transaction(path, findNestedPropertyInObject(
-        state,
-        searchPath
-      ));
+
+      let value = findNestedPropertyInObject(
+          state,
+          searchPath
+      );
+      if (value == null) {
+        return [];
+      }
+      return new Transaction(path, value);
+
     };
   }
 };
