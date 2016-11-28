@@ -100,6 +100,22 @@ class GeneralServiceFormSection extends Component {
       </p>
     );
   }
+  getMultiContainerSection() {
+    let {service} = this.props;
+    if (!(service instanceof Pod)) {
+      return null;
+    }
+
+    return (
+        <div>
+          <a
+            className="button button-primary-link button-flush"
+            onClick={this.props.onAddItem.bind(this, {value: 0, path: 'containers'})}>
+            + Add Container
+          </a>
+        </div>
+    );
+  }
 
   getRuntimeSection() {
     let {errors, service} = this.props;
@@ -257,6 +273,7 @@ class GeneralServiceFormSection extends Component {
 
         {this.getRuntimeSection()}
         {this.getContainerSection()}
+        {this.getMultiContainerSection()}
         {this.getConvertToPodAction()}
 
         <Confirm
@@ -288,7 +305,9 @@ GeneralServiceFormSection.defaultProps = {
 
 GeneralServiceFormSection.propTypes = {
   data: React.PropTypes.object,
-  errors: React.PropTypes.object
+  errors: React.PropTypes.object,
+  onAddItem: React.PropTypes.func,
+  onRemoveItem: React.PropTypes.func
 };
 
 GeneralServiceFormSection.reducers = General;

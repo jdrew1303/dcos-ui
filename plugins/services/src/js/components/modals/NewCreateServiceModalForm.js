@@ -7,6 +7,7 @@ import AppValidators from '../../../../../../src/resources/raml/marathon/v2/type
 import Batch from '../../../../../../src/js/structs/Batch';
 import CreateServiceModalFormUtil from '../../utils/CreateServiceModalFormUtil';
 import ContainerServiceFormSection from '../forms/ContainerServiceFormSection';
+import PodContainerServiceFormSection from '../forms/PodContainerServiceFormSection';
 import {combineParsers} from '../../../../../../src/js/utils/ParserUtil';
 import {combineReducers} from '../../../../../../src/js/utils/ReducerUtil';
 import EnvironmentFormSection from '../forms/EnvironmentFormSection';
@@ -298,6 +299,37 @@ class NewCreateServiceModalForm extends Component {
     return rootErrors;
   }
 
+  getContainerList(data) {
+    if (data.containers && data.containers.length !== 0) {
+      return data.containers.map((item, index) => {
+        return (
+            <TabButton key={index} id={`container${index}`}
+                label={item.name || `container ${index + 1}`}/>
+        );
+      });
+    }
+
+    return null;
+  }
+
+  getContainerContent(data, errors) {
+    let {containers = []} = data;
+    return containers.map((item, index) => {
+      let itemErrors = errors && errors.containers && errors.containers[item];
+
+      return (
+          <TabView key={index} id={`container${index}`}>
+            <PodContainerServiceFormSection
+                path={`containers.${index}`}
+                data={data}
+                errors={itemErrors}
+                onRemoveItem={this.handleRemoveItem}
+                onAddItem={this.handleAddItem} />
+          </TabView>
+      );
+    });
+  }
+
   render() {
     let {appConfig, batch, errorList, formReducer} = this.state;
     let {isJSONModeActive, isEdit, onConvertToPod, service} = this.props;
@@ -321,6 +353,7 @@ class NewCreateServiceModalForm extends Component {
             <Tabs vertical={true}>
               <TabButtonList>
                 <TabButton id="services" label="Services" />
+                {this.getContainerList(data)}
                 <TabButton id="environment" label="Environment" />
                 <TabButton id="healthChecks" label="Health Checks" />
               </TabButtonList>
@@ -332,8 +365,11 @@ class NewCreateServiceModalForm extends Component {
                     data={data}
                     isEdit={isEdit}
                     onConvertToPod={onConvertToPod}
-                    service={service} />
+                    service={service}
+                    onRemoveItem={this.handleRemoveItem}
+                    onAddItem={this.handleAddItem} />
                 </TabView>
+                {this.getContainerContent(data, errorMap)}
                 <TabView id="environment">
                   {rootErrorComponent}
                   <EnvironmentFormSection
