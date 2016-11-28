@@ -62,42 +62,25 @@ class NewCreateServiceModalForm extends Component {
   constructor() {
     super(...arguments);
 
-    let {service} = this.props;
-    let batch = new Batch();
-    let isPod = service instanceof Pod;
-    let jsonParser = combineParsers(JSONParser, {
-      cmd: !isPod,
-      container: !isPod,
-      containers: isPod
-    });
-    let jsonReducer = combineReducers(JSONReducers, {
-      cmd: !isPod,
-      container: !isPod,
-      containers: isPod
-    });
-
-    // Turn service configuration into Batch Transactions
-    if (service) {
-      jsonParser(service.toJSON()).forEach((item) => {
-        batch.add(item);
-      });
-    }
     this.state = Object.assign(
       {
+        appConfig: null,
         batch: new Batch(),
         baseConfig: {},
-        appConfig: null,
         errorList: [],
-        jsonReducer,
-        jsonParser
+        isPod: false,
+        jsonReducer() {},
+        jsonParser() {}
       },
       this.getNewStateForJSON(
         CreateServiceModalFormUtil.stripEmptyProperties(
           ServiceUtil.getServiceJSON(this.props.service)
         ),
+        this.props.service instanceof Pod,
         false
       )
     );
+
     // Render initial app config
     this.state.appConfig = this.getAppConfig(this.state);
 
@@ -112,32 +95,19 @@ class NewCreateServiceModalForm extends Component {
   componentWillReceiveProps(nextProps) {
     let prevJSON = ServiceUtil.getServiceJSON(this.props.service);
     let nextJSON = ServiceUtil.getServiceJSON(nextProps.service);
-    let {service} = nextProps;
-    let nextState = {};
-    let isPod = service instanceof Pod;
+    let isPod = nextProps.service instanceof Pod;
 
-    // Detect change from non-Pod to Pod
-    if (isPod && !(this.props.service instanceof Pod)) {
-      nextState.jsonParser = combineParsers(JSONParser, {
-        cmd: !isPod,
-        container: !isPod,
-        containers: isPod
-      });
-      nextState.jsonReducer = combineReducers(JSONReducers, {
-        cmd: !isPod,
-        container: !isPod,
-        containers: isPod
-      });
-    }
     // Note: We ignore changes that might derrive from the `onChange` event
     //       handler. In that case the contents of nextJSON would be the same
     //       as the contents of the last rendered appConfig in the state.
-    if (!deepEqual(prevJSON, nextJSON) &&
-        !deepEqual(this.state.appConfig, nextJSON)) {
-      console.log('Updating because service changed');
-      nextState = Object.assign({}, nextState, this.getNewStateForJSON(nextJSON));
+    if ((this.state.isPod !== isPod) || (!deepEqual(prevJSON, nextJSON) &&
+        !deepEqual(this.state.appConfig, nextJSON))) {
+      let nextState = this.getNewStateForJSON(nextJSON, isPod);
+
+      nextState.appConfig = this.getAppConfig(nextState);
+
+      this.setState(nextState);
     }
-    this.setState(nextState);
   }
 
   handleConvertToPod() {
@@ -162,6 +132,11 @@ class NewCreateServiceModalForm extends Component {
       return true;
     }
 
+    // Update if pod type changed
+    if (this.state.isPod !== (nextProps.service instanceof Pod)) {
+      return true;
+    }
+
     // Update if service property has changed
     //
     // Note: We ignore changes that might derrive from the `onChange` event
@@ -172,7 +147,6 @@ class NewCreateServiceModalForm extends Component {
     let nextJSON = ServiceUtil.getServiceJSON(nextProps.service);
     if (!deepEqual(prevJSON, nextJSON) &&
         !deepEqual(this.state.appConfig, nextJSON)) {
-      console.log('Will update because service changed');
       return true;
     };
 
@@ -182,22 +156,29 @@ class NewCreateServiceModalForm extends Component {
            (this.state.batch !== nextState.batch);
   }
 
-  getNewStateForJSON(baseConfig={}, validate=true) {
+  getNewStateForJSON(baseConfig={}, isPod=this.state.isPod, validate=true) {
+    let jsonParser = combineParsers(JSONParser, {
+      cmd: !isPod,
+      container: !isPod,
+      containers: isPod
+    });
+    let jsonReducer = combineReducers(JSONReducers, {
+      cmd: !isPod,
+      container: !isPod,
+      containers: isPod
+    });
     let newState = {
       appConfig: {},
-      baseConfig
+      baseConfig,
+      isPod,
+      jsonParser,
+      jsonReducer
     };
 
-    // debugger;
-    newState.batch = new Batch();
-
-    if (this.state != null) {
-      let {jsonParser} = this.state;
-      // Regenerate batch
-      newState.batch = jsonParser(baseConfig).reduce((batch, item) => {
-        return batch.add(item);
-      }, new Batch());
-    }
+    // Regenerate batch
+    newState.batch = jsonParser(baseConfig).reduce((batch, item) => {
+      return batch.add(item);
+    }, new Batch());
 
     // Perform error validation
     newState.errorList = [];
