@@ -2,40 +2,18 @@ import React, {PropTypes} from 'react';
 
 import ActionKeys from '../../constants/ActionKeys';
 import Application from '../../structs/Application';
-import Pod from '../../structs/Pod';
 import ServiceTree from '../../structs/ServiceTree';
 
 import ServiceActionItem from '../../constants/ServiceActionItem';
 import ServiceDestroyModal from './ServiceDestroyModal';
 import NewCreateServiceModal from './NewCreateServiceModal';
-import {NEW_APP_DEFAULTS} from '../../constants/NewApplicationDefaults';
 import ServiceGroupFormModal from './ServiceGroupFormModal';
 import ServiceRestartModal from './ServiceRestartModal';
 import ServiceScaleFormModal from './ServiceScaleFormModal';
 import ServiceSpecUtil from '../../utils/ServiceSpecUtil';
 import ServiceSuspendModal from './ServiceSuspendModal';
 
-const METHODS_TO_BIND = [
-  'handleConvertToPod'
-];
-
 class ServiceModals extends React.Component {
-  constructor() {
-    super(...arguments);
-
-    this.state = {serviceToCreate: null};
-
-    METHODS_TO_BIND.forEach((method) => {
-      this[method] = this[method].bind(this);
-    });
-  }
-
-  handleConvertToPod() {
-    // TODO: Create a function, e.g. ServiceUtil.podSpecFromApplicationSpec
-    // to create a pod spec from an application spec
-    this.setState({serviceToCreate: new Pod()});
-  }
-
   getGroupModal() {
     const {
       actions,
@@ -79,25 +57,10 @@ class ServiceModals extends React.Component {
     // return value of `getId` would be `/` so in most cases we want to append a
     // `/` so that the user can begin typing the `id` of their application.
     const {service} = modalProps;
-    const baseId = service.getId().replace(/^(\/.+)$/, '$1/');
     const key = ActionKeys.SERVICE_CREATE;
     const createService = (_, serviceSpec, force) => {
       this.props.actions.createService(serviceSpec, force);
     };
-
-    // If state has been set by modal to create a Pod, let's not create a new
-    // service. We are not storing this on state, since the baseId could
-    // have been changed, e.g. navigating into a group, so we don't know until
-    // the modal is actually opened
-    let {serviceToCreate} = this.state;
-    if (!serviceToCreate) {
-      serviceToCreate = new Application(
-          Object.assign(
-              {id: baseId},
-              NEW_APP_DEFAULTS
-          )
-      );
-    }
 
     return (
       <NewCreateServiceModal
@@ -107,9 +70,8 @@ class ServiceModals extends React.Component {
         isPending={!!pendingActions[key]}
         marathonAction={createService}
         open={modalProps.id === ServiceActionItem.CREATE}
-        service={serviceToCreate}
-        onClose={() => onClose(key)}
-        onConvertToPod={this.handleConvertToPod} />
+        service={service}
+        onClose={() => onClose(key)}/>
     );
   }
 

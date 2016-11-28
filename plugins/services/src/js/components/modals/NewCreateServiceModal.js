@@ -21,6 +21,7 @@ import Util from '../../../../../../src/js/utils/Util';
 const METHODS_TO_BIND = [
   'handleGoBack',
   'handleClose',
+  'handleConvertToPod',
   'handleJSONToggle',
   'handleServiceChange',
   'handleServiceErrorChange',
@@ -97,6 +98,10 @@ class NewServiceFormModal extends Component {
   handleClose() {
     this.props.onClose();
     this.setState(this.getResetState());
+  }
+
+  handleConvertToPod() {
+    this.handleServiceSelection({type:'pod'});
   }
 
   handleJSONToggle() {
@@ -261,14 +266,14 @@ class NewServiceFormModal extends Component {
     }
 
     if (serviceFormActive) {
-      let {isEdit, onConvertToPod} = this.props;
+      let {isEdit} = this.props;
 
       return (
         <NewCreateServiceModalForm
           isJSONModeActive={isJSONModeActive}
           service={serviceConfig}
           onChange={this.handleServiceChange}
-          onConvertToPod={onConvertToPod}
+          onConvertToPod={this.handleConvertToPod}
           onErrorStateChange={this.handleServiceErrorChange}
           isEdit={isEdit}/>
       );

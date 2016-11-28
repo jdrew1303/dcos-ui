@@ -151,7 +151,8 @@ class NewCreateServiceModalForm extends Component {
    * @override
    */
   componentDidUpdate() {
-    this.props.onChange(this.state.appConfig);
+    let newService = new this.props.service.constructor(this.state.appConfig);
+    this.props.onChange(newService);
     this.props.onErrorStateChange(this.state.errorList.length !== 0);
   }
 
