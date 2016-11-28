@@ -61,28 +61,25 @@ class GeneralServiceFormSection extends Component {
 
   getContainerSection() {
     let {data = {}, errors} = this.props;
-    let {containers = [], container} = data;
 
     if (!(this.props.service instanceof Pod)) {
       return (
         <ContainerServiceFormSection
-          path="container.docker"
-          data={container}
+          data={data}
           errors={errors.container} />
       );
     }
 
-    // TODO: This could maybe work as the same section, maybe not.
-    // We need to make a decition here, whether to re-use or
-    // just create a separate section
+    let {containers = []} = data;
     return containers.map((item, index) => {
-      let itemErrors = errors && errors.containers[item];
-
       return (
-        <ContainerServiceFormSection
-          path={`containers.${index}`}
-          data={item}
-          errors={itemErrors} />
+        <div key={index}>
+          {item.name || `container ${index + 1}`}
+          <a className="button button-primary-link"
+            onClick={this.props.onRemoveItem.bind(this, {value: index, path: 'containers'})}>
+            Delete
+          </a>
+        </div>
       );
     });
   }

@@ -29,17 +29,16 @@ const containerSettings = {
 
 class ContainerServiceFormSection extends Component {
   getAdvancedSettings(data = {}, errors = {}) {
-    let {path} = this.props;
     let typeErrors = errors.container && errors.container.type;
     let selections = Object.keys(containerSettings).map((settingName, index) => {
       let {helpText, label} = containerSettings[settingName];
-      let checked = findNestedPropertyInObject(data, `${path}.${settingName}`);
+      let checked = findNestedPropertyInObject(data, `container.docker.${settingName}`);
 
       return (
         <FieldLabel key={index}>
           <FieldInput
             checked={Boolean(checked)}
-            name={`${path}.${settingName}`}
+            name={`container.docker.${settingName}`}
             type="checkbox"
             value={settingName} />
           {label}
@@ -48,7 +47,7 @@ class ContainerServiceFormSection extends Component {
       );
     });
 
-    let diskErrors = findNestedPropertyInObject(errors, `${path}.resources.disk`);
+    let diskErrors = findNestedPropertyInObject(errors, 'disk');
 
     return (
       <AdvancedSectionContent>
@@ -61,9 +60,9 @@ class ContainerServiceFormSection extends Component {
           <FormGroup className="column-4" showError={Boolean(diskErrors)}>
             <FieldLabel>Disk (MiB)</FieldLabel>
             <FieldInput
-              name={`${path}.resources.disk`}
+              name="disk"
               type="number"
-              value={findNestedPropertyInObject(data, `${path}.resources.disk`)} />
+              value={data.disk} />
             <FieldError>{diskErrors}</FieldError>
           </FormGroup>
         </div>
@@ -126,12 +125,12 @@ class ContainerServiceFormSection extends Component {
   }
 
   render() {
-    let {data, errors, path} = this.props;
+    let {data, errors} = this.props;
 
-    let imageErrors = findNestedPropertyInObject(errors, `${path}.image`);
-    let cpusErrors = findNestedPropertyInObject(errors, `${path}.resources.cpus`);
-    let memErrors = findNestedPropertyInObject(errors, `${path}.resources.mem`);
-    let commandErrors = findNestedPropertyInObject(errors, `${path}.exec.command`);
+    let imageErrors = findNestedPropertyInObject(errors, 'docker.container.image');
+    let cpusErrors = findNestedPropertyInObject(errors, 'cpus');
+    let memErrors = findNestedPropertyInObject(errors, 'mem');
+    let commandErrors = findNestedPropertyInObject(errors, 'cmd');
 
     return (
       <div>
@@ -143,8 +142,8 @@ class ContainerServiceFormSection extends Component {
           <FormGroup className="column-6" showError={Boolean(imageErrors)}>
             {this.getImageLabel()}
             <FieldInput
-              name={`${path}.image`}
-              value={findNestedPropertyInObject(data, `${path}.image`)} />
+              name="container.docker.image"
+              value={findNestedPropertyInObject(data, 'container.docker.image')} />
             <FieldHelp>
               Enter a Docker image you want to run, e.g. nginx.
             </FieldHelp>
@@ -161,10 +160,10 @@ class ContainerServiceFormSection extends Component {
               CPUs
             </FieldLabel>
             <FieldInput
-              name={`${path}.resources.cpus`}
+              name="cpus"
               type="number"
               step="0.01"
-              value={findNestedPropertyInObject(data, `${path}.resources.cpus`)} />
+              value={data.cpus} />
             <FieldError>
               {cpusErrors}
             </FieldError>
@@ -177,9 +176,9 @@ class ContainerServiceFormSection extends Component {
               Memory (MiB)
             </FieldLabel>
             <FieldInput
-              name={`${path}.resources.mem`}
+              name="mem"
               type="number"
-              value={findNestedPropertyInObject(data, `${path}.resources.mem`)} />
+              value={data.mem} />
             <FieldError>
               {memErrors}
             </FieldError>
@@ -189,8 +188,8 @@ class ContainerServiceFormSection extends Component {
         <FormGroup showError={Boolean(commandErrors)}>
           {this.getCMDLabel()}
           <FieldTextarea
-            name={`${path}.exec.command`}
-            value={findNestedPropertyInObject(data, `${path}.exec.command`)} />
+            name="cmd"
+            value={data.cmd} />
           <FieldHelp>
             A shell command for your container to execute.
           </FieldHelp>
@@ -212,14 +211,12 @@ class ContainerServiceFormSection extends Component {
 
 ContainerServiceFormSection.defaultProps = {
   data: {},
-  errors: {},
-  path: 'container.docker'
+  errors: {}
 };
 
 ContainerServiceFormSection.propTypes = {
   data: React.PropTypes.object,
-  errors: React.PropTypes.object,
-  path: React.PropTypes.string
+  errors: React.PropTypes.object
 };
 
 ContainerServiceFormSection.reducers = {

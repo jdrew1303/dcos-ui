@@ -3,7 +3,6 @@ import {JSONReducer as containers} from './serviceForm/Containers';
 import {JSONReducer as env} from './serviceForm/EnvironmentVariables';
 import {JSONReducer as labels} from './serviceForm/Labels';
 import {JSONReducer as healthChecks} from './serviceForm/HealthChecks';
-import {SET} from '../../../../../src/js/constants/TransactionTypes';
 import {
   simpleFloatReducer,
   simpleIntReducer,
@@ -18,18 +17,7 @@ module.exports = {
   cpus: simpleFloatReducer('cpus'),
   mem: simpleIntReducer('mem'),
   disk: simpleIntReducer('disk'),
-  cmd(state, {type, path = [], value}) {
-    if (!path.includes('container')) {
-      return state;
-    }
-
-    const joinedPath = path.join('.');
-    if (type === SET && joinedPath === 'container.docker.exec.command') {
-      return value;
-    }
-
-    return state;
-  },
+  cmd: simpleReducer('cmd'),
   env,
   labels,
   healthChecks
