@@ -11,6 +11,8 @@ import {combineParsers} from '../../../../../../src/js/utils/ParserUtil';
 import {combineReducers} from '../../../../../../src/js/utils/ReducerUtil';
 import EnvironmentFormSection from '../forms/EnvironmentFormSection';
 import GeneralServiceFormSection from '../forms/GeneralServiceFormSection';
+import JSONReducers from '../../reducers/JSONReducers';
+import JSONParser from '../../reducers/JSONParser';
 import Pod from '../../structs/Pod';
 import HealthChecksFormSection from '../forms/HealthChecksFormSection';
 import JSONEditor from '../../../../../../src/js/components/JSONEditor';
@@ -39,6 +41,10 @@ const SECTIONS = [
   HealthChecksFormSection
 ];
 
+const FORM_SECTIONS_REDUCERS = combineReducers(
+  Object.assign({}, ...SECTIONS.map((item) => item.reducers))
+);
+
 const ERROR_VALIDATORS = [
   AppValidators.App
 ];
@@ -62,9 +68,7 @@ class NewCreateServiceModalForm extends Component {
     this.state = Object.assign(
       {
         baseConfig: {},
-        batch,
         errorList: [],
-        formReducer() {},
         isPod: false,
         jsonParser() {},
         jsonReducer() {}
@@ -99,7 +103,6 @@ class NewCreateServiceModalForm extends Component {
     //       as the contents of the last rendered appConfig in the state.
     if (!deepEqual(prevJSON, nextJSON) &&
         !deepEqual(this.state.appConfig, nextJSON)) {
-      console.log('Updating because service changed');
       this.setState(this.getNewStateForJSON(nextJSON, isPod));
     }
   }
@@ -131,7 +134,6 @@ class NewCreateServiceModalForm extends Component {
     let nextJSON = getServiceJSON(nextProps.service);
     if (!deepEqual(prevJSON, nextJSON) &&
         !deepEqual(this.state.appConfig, nextJSON)) {
-      console.log('Will update because service changed');
       return true;
     };
 
@@ -142,9 +144,6 @@ class NewCreateServiceModalForm extends Component {
   }
 
   getNewStateForJSON(baseConfig={}, isPod=this.state.isPod, validate=true) {
-    let formReducer = combineReducers(
-      Object.assign({}, ...SECTIONS.map((item) => item.reducers))
-    );
     let jsonParser = combineParsers(JSONParser, {
       cmd: !isPod,
       container: !isPod,
@@ -158,7 +157,6 @@ class NewCreateServiceModalForm extends Component {
     let newState = {
       appConfig: {},
       baseConfig,
-      formReducer,
       isPod,
       jsonParser,
       jsonReducer
@@ -173,6 +171,9 @@ class NewCreateServiceModalForm extends Component {
     if (validate) {
       newState.errorList = DataValidatorUtil.validate(baseConfig, ERROR_VALIDATORS);
     }
+
+    // Update appConfig
+    newState.appConfig = this.getAppConfig(newState);
 
     return newState;
   }
@@ -203,12 +204,13 @@ class NewCreateServiceModalForm extends Component {
   }
 
   handleFormChange(event) {
-    let {batch, baseConfig} = this.state;
+    let {batch, baseConfig, jsonReducer} = this.state;
 
     let value = event.target.value;
     if (event.target.type === 'checkbox') {
       value = event.target.checked;
     }
+
     let path = event.target.getAttribute('name').split('.');
     batch = batch.add(new Transaction(path, value));
     let newState = {batch};
@@ -221,7 +223,7 @@ class NewCreateServiceModalForm extends Component {
 
     // Render the new appconfig
     newState.appConfig = this.getAppConfig({
-      batch, baseConfig
+      batch, baseConfig, jsonReducer
     });
 
     this.setState(newState);
@@ -269,16 +271,10 @@ class NewCreateServiceModalForm extends Component {
     return rootErrors;
   }
 
-  getAppConfig() {
-    let {appConfig, batch, jsonReducer} = this.state;
-
-    return batch.reduce(jsonReducer, appConfig);
-  }
-
   render() {
-    let {appConfig, batch, errorList, formReducer} = this.state;
+    let {appConfig, batch, errorList} = this.state;
     let {isJSONModeActive, isEdit, onConvertToPod} = this.props;
-    let data = batch.reduce(formReducer, {});
+    let data = batch.reduce(FORM_SECTIONS_REDUCERS, {});
 
     let jsonEditorPlaceholderClasses = classNames(
       'modal-full-screen-side-panel-placeholder',
@@ -309,7 +305,7 @@ class NewCreateServiceModalForm extends Component {
                     data={data}
                     isEdit={isEdit}
                     onConvertToPod={onConvertToPod}
-                    service={service} />
+                    service={this.props.service} />
                 </TabView>
                 <TabView id="environment">
                   {rootErrorComponent}

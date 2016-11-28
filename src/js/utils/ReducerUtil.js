@@ -61,9 +61,7 @@ module.exports = {
         // but it will not copy the function, which in this case is a huge
         // increase in performance.
         let value = reducer.call(context.get(reducer), localState[key], action);
-        if (value) {
-          localState[key] = value;
-        }
+        localState[key] = value;
       }
 
       return localState;
