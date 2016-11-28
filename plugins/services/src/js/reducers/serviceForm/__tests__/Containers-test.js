@@ -1,7 +1,7 @@
 const Containers = require('../Containers');
 const Batch = require('../../../../../../../src/js/structs/Batch');
 const Transaction = require('../../../../../../../src/js/structs/Transaction');
-const {SET} = require('../../../../../../../src/js/constants/TransactionTypes');
+const {ADD_ITEM} = require('../../../../../../../src/js/constants/TransactionTypes');
 
 describe('Containers', function () {
 
@@ -16,13 +16,12 @@ describe('Containers', function () {
 
     it('returns an array as default with a container path Transaction', function () {
       let batch = new Batch();
-      batch.add(new Transaction(['containers'], null, SET));
+      batch = batch.add(new Transaction(['containers'], 0, ADD_ITEM));
 
       expect(batch.reduce(Containers.JSONReducer.bind({})))
-        .toEqual([]);
+        .toEqual([{}]);
     });
 
   });
-
   // FormReducer is the same as JSONReducer
 });
