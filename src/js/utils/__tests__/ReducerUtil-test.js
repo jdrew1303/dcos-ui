@@ -237,7 +237,7 @@ describe('ReducerUtil', function () {
     });
 
     it('returns string if cannot be parsed to integer', function () {
-      const simpleIntReducer = ReducerUtil.simpleIntReducer('foo,bar', 'default');
+      const simpleIntReducer = ReducerUtil.simpleIntReducer('foo.bar', 'default');
       const action = {
         path: ['foo', 'bar'],
         type: TransactionType.SET,
@@ -247,7 +247,7 @@ describe('ReducerUtil', function () {
     });
 
     it('returns number if value can be parsed to integer', function () {
-      const simpleIntReducer = ReducerUtil.simpleIntReducer('foo,bar', 'default');
+      const simpleIntReducer = ReducerUtil.simpleIntReducer('foo.bar', 'default');
       const action = {
         path: ['foo', 'bar'],
         type: TransactionType.SET,
@@ -273,7 +273,7 @@ describe('ReducerUtil', function () {
     });
 
     it('returns string if cannot be parsed to float', function () {
-      const simpleFloatReducer = ReducerUtil.simpleFloatReducer('foo,bar', 'default');
+      const simpleFloatReducer = ReducerUtil.simpleFloatReducer('foo.bar', 'default');
       const action = {
         path: ['foo', 'bar'],
         type: TransactionType.SET,
@@ -283,7 +283,7 @@ describe('ReducerUtil', function () {
     });
 
     it('returns number if value can be parsed to float', function () {
-      const simpleFloatReducer = ReducerUtil.simpleFloatReducer('foo,bar', 'default');
+      const simpleFloatReducer = ReducerUtil.simpleFloatReducer('foo.bar', 'default');
       const action = {
         path: ['foo', 'bar'],
         type: TransactionType.SET,

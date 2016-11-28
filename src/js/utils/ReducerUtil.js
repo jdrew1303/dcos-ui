@@ -72,7 +72,7 @@ module.exports = {
 
   simpleReducer(needle, defaultState = '') {
     return function (state = defaultState, {path, type, value}) {
-      if (type === TransactionTypes.SET && path.join() === needle) {
+      if (type === TransactionTypes.SET && path.join('.') === needle) {
         return value;
       }
 
@@ -83,7 +83,7 @@ module.exports = {
   simpleIntReducer(needle, defaultState = '') {
     return function (state = defaultState, {path, type, value}) {
       let parsedValue = parseInt(value);
-      if (type === TransactionTypes.SET && path.join() === needle) {
+      if (type === TransactionTypes.SET && path.join('.') === needle) {
         if (!isNaN(parsedValue)) {
           return parsedValue;
         }
@@ -98,7 +98,7 @@ module.exports = {
   simpleFloatReducer(needle, defaultState = '') {
     return function (state = defaultState, {path, type, value}) {
       let parsedValue = parseFloat(value);
-      if (type === TransactionTypes.SET && path.join() === needle) {
+      if (type === TransactionTypes.SET && path.join('.') === needle) {
         if (!isNaN(parsedValue)) {
           return parsedValue;
         }
