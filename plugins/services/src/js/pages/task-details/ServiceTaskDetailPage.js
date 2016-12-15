@@ -40,8 +40,12 @@ class ServiceTaskDetailPage extends React.Component {
       return regex.test(location.pathname);
     });
 
+    const fullscreenTab = tabs.some((tab) => {
+      return location.pathname.startsWith(tab.routePath) && tab.fill;
+    });
+
     return (
-      <Page dontScroll={dontScroll}>
+      <Page dontScroll={dontScroll} fill={fullscreenTab}>
         <Page.Header
           breadcrumbs={breadcrumbs}
           tabs={tabs}

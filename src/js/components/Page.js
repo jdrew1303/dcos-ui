@@ -27,6 +27,7 @@ TemplateUtil.defineChildren(PageHeader, {
 
 PageHeader.defaultProps = {
   actions: [],
+  fill: false,
   tabs: []
 };
 
@@ -37,6 +38,7 @@ PageHeader.propTypes = {
     React.PropTypes.object
   ]),
   breadcrumbs: React.PropTypes.node,
+  fill: React.PropTypes.bool,
   tabs: React.PropTypes.array
 };
 
@@ -132,11 +134,14 @@ var Page = React.createClass({
   },
 
   getContent() {
-    const {dontScroll} = this.props;
-    let contentClassSet = classNames('page-body-content pod pod-tall flex',
-      'flex-direction-top-to-bottom flex-item-grow-1', {
-        'flex-item-shrink-1': dontScroll
-      });
+    const {dontScroll, fill} = this.props;
+    const contentClassSet = classNames('page-body-content flex', {
+      'pod pod-tall': !fill,
+      'page-body-content-full': fill
+    },
+    'flex-direction-top-to-bottom flex-item-grow-1', {
+      'flex-item-shrink-1': dontScroll && !fill
+    });
 
     let content = (
       <div className={contentClassSet}>
@@ -144,7 +149,7 @@ var Page = React.createClass({
       </div>
     );
 
-    if (dontScroll) {
+    if (dontScroll && !fill) {
       return content;
     }
 
@@ -161,11 +166,11 @@ var Page = React.createClass({
   },
 
   render() {
-    const {className, navigation, dontScroll, title} = this.props;
+    const {className, navigation, dontScroll, fill, title} = this.props;
 
     let classSet = classNames(
       'page flex flex-direction-top-to-bottom flex-item-grow-1', {
-        'flex-item-shrink-1': dontScroll
+        'flex-item-shrink-1': dontScroll && !fill
       }, className
     );
 

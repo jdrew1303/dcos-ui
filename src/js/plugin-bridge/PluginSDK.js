@@ -62,6 +62,7 @@ const Store = createStore(
  * @param {Object} pluginsConfig - Plugin configuration
  */
 const initialize = function (pluginsConfig) {
+  pluginsConfig['console'] = {enabled: true};
 
   const {pluginsList, externalPluginsList} = Loader.getAvailablePlugins();
 
