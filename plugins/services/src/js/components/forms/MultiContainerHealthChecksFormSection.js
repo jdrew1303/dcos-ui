@@ -13,6 +13,7 @@ import FormGroup from '../../../../../../src/js/components/form/FormGroup';
 import FormGroupContainer from '../../../../../../src/js/components/form/FormGroupContainer';
 import FormRow from '../../../../../../src/js/components/form/FormRow';
 import {HTTP, TCP, COMMAND} from '../../constants/HealthCheckProtocols';
+import Icon from '../../../../../../src/js/components/Icon';
 
 class MultiContainerHealthChecksFormSection extends Component {
   getAdvancedSettings(healthCheck, path, errorsLens) {
@@ -198,9 +199,10 @@ class MultiContainerHealthChecksFormSection extends Component {
     if (healthCheck == null) {
       return (
         <div>
-          <a className="button button-primary-link button-flush"
-            onClick={this.props.onAddItem.bind(this, {path})}>
-            + Add Health Check
+          <a
+            className="button button-primary-link button-flush"
+            onClick={this.props.onAddItem.bind(this, {path, value: index})}>
+            <Icon color="purple" id="plus" size="tiny" /> Add Health Check
           </a>
         </div>
       );
@@ -242,7 +244,6 @@ class MultiContainerHealthChecksFormSection extends Component {
               the application{'\''}s tasks.
             </p>
           </div>
-
           {this.getHealthChecksBody(container, index)}
         </div>
       );
