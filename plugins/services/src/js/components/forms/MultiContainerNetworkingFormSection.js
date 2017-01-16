@@ -391,6 +391,7 @@ class MultiContainerNetworkingFormSection extends mixin(StoreMixin) {
                 <Icon color="grey" id="circle-question" size="mini" />
               </Tooltip>
             </FieldLabel>
+            <p>The network type will be shared across all your containers.</p>
             {this.getTypeSelections()}
             <FieldError>{networkError}</FieldError>
           </FormGroup>
