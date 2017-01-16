@@ -239,7 +239,7 @@ class MultiContainerHealthChecksFormSection extends Component {
             </h2>
             <p>
               Health checks may be specified per application to be run against
-              the application{'\''}s tasks.
+              the application{'\''}s instances.
             </p>
           </div>
 
