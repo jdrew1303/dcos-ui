@@ -121,7 +121,7 @@ class CreateServiceJsonOnly extends React.Component {
     };
 
     return (
-      <div className="create-service-modal-json-only container">
+      <div className="create-service-modal-json-only container container-wide">
         <div className="create-service-modal-json-only-introduction">
           <FieldLabel>JSON Configuration</FieldLabel>
           <FieldHelp>

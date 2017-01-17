@@ -66,7 +66,7 @@ class NewCreateServiceModalServicePicker extends React.Component {
   getServiceDeployOptions() {
     // TODO: Implement the correct copy when received. DCOS-11807
     return (
-      <div className="create-service-modal-service-picker container text-align-center">
+      <div className="create-service-modal-service-picker container container-wide text-align-center">
         <h4 className="short flush-top">
           Run your own Service
         </h4>
