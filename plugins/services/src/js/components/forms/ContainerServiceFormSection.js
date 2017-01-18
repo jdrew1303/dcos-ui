@@ -4,6 +4,7 @@ import {Tooltip} from 'reactjs-components';
 import {FormReducer as ContainerReducer} from '../../reducers/serviceForm/Container';
 import {FormReducer as ContainersReducer} from '../../reducers/serviceForm/Containers';
 import {findNestedPropertyInObject} from '../../../../../../src/js/utils/Util';
+import AddButton from '../../../../../../src/js/components/form/AddButton';
 import AdvancedSection from '../../../../../../src/js/components/form/AdvancedSection';
 import AdvancedSectionContent from '../../../../../../src/js/components/form/AdvancedSectionContent';
 import AdvancedSectionLabel from '../../../../../../src/js/components/form/AdvancedSectionLabel';
@@ -204,11 +205,10 @@ class ContainerServiceFormSection extends Component {
         {this.getArtifactsInputs(data.fetch)}
         <FormRow>
           <FormGroup className="column-12">
-            <a
-              className="button button-primary-link button-flush"
+            <AddButton
               onClick={this.props.onAddItem.bind(this, {value: data.fetch.length, path: 'fetch'})}>
-              <Icon color="purple" id="plus" size="tiny" /> Add Artifact
-            </a>
+              Add Artifact
+            </AddButton>
           </FormGroup>
         </FormRow>
       </AdvancedSectionContent>

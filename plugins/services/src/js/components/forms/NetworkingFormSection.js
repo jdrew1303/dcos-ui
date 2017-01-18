@@ -3,6 +3,7 @@ import {Tooltip} from 'reactjs-components';
 import mixin from 'reactjs-mixin';
 import {StoreMixin} from 'mesosphere-shared-reactjs';
 
+import AddButton from '../../../../../../src/js/components/form/AddButton';
 import FieldHelp from '../../../../../../src/js/components/form/FieldHelp';
 import FieldInput from '../../../../../../src/js/components/form/FieldInput';
 import FieldLabel from '../../../../../../src/js/components/form/FieldLabel';
@@ -440,19 +441,15 @@ class NetworkingFormSection extends mixin(StoreMixin) {
         {this.getServiceEndpoints()}
         <FormRow key="service-endpoints-add-button">
           <FormGroup className="column-12">
-            <button
-              type="button"
-              onBlur={(event) => { event.stopPropagation(); }}
-              className="button button-primary-link button-flush"
-              onClick={this.props.onAddItem.bind(
-                this,
-                {
-                  value: portDefinitions.length,
-                  path: 'portDefinitions'
-                }
-              )}>
-              <Icon color="purple" id="plus" size="tiny" /> Add Service Endpoint
-            </button>
+            <AddButton onClick={this.props.onAddItem.bind(
+              this,
+              {
+                value: portDefinitions.length,
+                path: 'portDefinitions'
+              }
+            )}>
+              Add Service Endpoint
+            </AddButton>
           </FormGroup>
         </FormRow>
       </div>

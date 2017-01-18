@@ -3,6 +3,7 @@ import {Tooltip} from 'reactjs-components';
 
 import {FormReducer as ContainerReducer} from '../../reducers/serviceForm/Container';
 import {FormReducer as ContainersReducer} from '../../reducers/serviceForm/Containers';
+import AddButton from '../../../../../../src/js/components/form/AddButton';
 import AdvancedSection from '../../../../../../src/js/components/form/AdvancedSection';
 import AdvancedSectionContent from '../../../../../../src/js/components/form/AdvancedSectionContent';
 import AdvancedSectionLabel from '../../../../../../src/js/components/form/AdvancedSectionLabel';
@@ -103,11 +104,11 @@ class PodContainerServiceFormSection extends Component {
           {this.getArtifacts(data, errors)}
         </div>
 
-        <a className="button button-primary-link button-flush"
-          onClick={this.props.onAddItem.bind(this,
-            {value: 0, path: `${path}.artifacts`})}>
-          <Icon color="purple" id="plus" size="tiny" /> Add Artifact
-        </a>
+        <AddButton onClick={this.props.onAddItem.bind(
+            this, {value: 0, path: `${path}.artifacts`}
+          )}>
+          Add Artifact
+        </AddButton>
       </AdvancedSectionContent>
     );
   }
