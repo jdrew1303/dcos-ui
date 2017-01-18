@@ -144,7 +144,7 @@ class GeneralServiceFormSection extends Component {
           className="button button-primary-link button-flush"
           onClick={this.props.onAddItem.bind(this,
             {value: 0, path: 'containers'})}>
-          + Add Container
+          <Icon color="purple" id="plus" size="tiny" /> Add Container
         </a>
       </div>
     );

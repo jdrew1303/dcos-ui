@@ -106,7 +106,7 @@ class PodContainerServiceFormSection extends Component {
         <a className="button button-primary-link button-flush"
           onClick={this.props.onAddItem.bind(this,
             {value: 0, path: `${path}.artifacts`})}>
-          + Add Artifact
+          <Icon color="purple" id="plus" size="tiny" /> Add Artifact
         </a>
       </AdvancedSectionContent>
     );
