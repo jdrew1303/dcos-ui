@@ -183,8 +183,9 @@ describe('Containers', function () {
                 0,
                 'endpoints',
                 0,
-                'protocol'
-              ], 'udp'));
+                'protocol',
+                'udp'
+              ], true));
 
           expect(batch.reduce(Containers.JSONReducer.bind({})))
           .toEqual([
@@ -199,6 +200,7 @@ describe('Containers', function () {
                   name: null,
                   hostPort: 0,
                   protocol: [
+                    'tcp',
                     'udp'
                   ]
                 }
@@ -227,8 +229,9 @@ describe('Containers', function () {
                 0,
                 'endpoints',
                 0,
-                'protocol'
-              ], 'foo'));
+                'protocol',
+                'foo'
+              ], true));
 
           expect(batch.reduce(Containers.JSONReducer.bind({})))
           .toEqual([
@@ -243,6 +246,7 @@ describe('Containers', function () {
                   name: null,
                   hostPort: 0,
                   protocol: [
+                    'tcp',
                     'foo'
                   ]
                 }
@@ -422,8 +426,9 @@ describe('Containers', function () {
                 0,
                 'endpoints',
                 0,
-                'protocol'
-              ], 'udp'));
+                'protocol',
+                'udp'
+              ], true));
 
           expect(batch.reduce(Containers.JSONReducer.bind({})))
           .toEqual([
@@ -440,6 +445,7 @@ describe('Containers', function () {
                   labels: null,
                   hostPort: 0,
                   protocol: [
+                    'tcp',
                     'udp'
                   ]
                 }
@@ -468,8 +474,9 @@ describe('Containers', function () {
                 0,
                 'endpoints',
                 0,
-                'protocol'
-              ], 'foo'));
+                'protocol',
+                'foo'
+              ], true));
 
           expect(batch.reduce(Containers.JSONReducer.bind({})))
           .toEqual([
@@ -486,6 +493,7 @@ describe('Containers', function () {
                   labels: null,
                   hostPort: 0,
                   protocol: [
+                    'tcp',
                     'foo'
                   ]
                 }
@@ -830,7 +838,10 @@ describe('Containers', function () {
                   name: null,
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: null
                 }
@@ -876,7 +887,10 @@ describe('Containers', function () {
                   name: 'foo',
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: null
                 }
@@ -940,7 +954,10 @@ describe('Containers', function () {
                   name: 'foo',
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: null
                 }
@@ -969,8 +986,9 @@ describe('Containers', function () {
                 0,
                 'endpoints',
                 0,
-                'protocol'
-              ], 'udp'));
+                'protocol',
+                'udp'
+              ], true));
 
           expect(batch.reduce(Containers.FormReducer.bind({})))
           .toEqual([
@@ -988,7 +1006,10 @@ describe('Containers', function () {
                   name: null,
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'udp',
+                  protocol: {
+                    tcp: true,
+                    udp: true
+                  },
                   servicePort: null,
                   containerPort: null
                 }
@@ -1017,8 +1038,9 @@ describe('Containers', function () {
                 0,
                 'endpoints',
                 0,
-                'protocol'
-              ], 'foo'));
+                'protocol',
+                'foo'
+              ], true));
 
           expect(batch.reduce(Containers.FormReducer.bind({})))
           .toEqual([
@@ -1036,7 +1058,11 @@ describe('Containers', function () {
                   name: null,
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'foo',
+                  protocol: {
+                    tcp: true,
+                    udp: false,
+                    foo: true
+                  },
                   servicePort: null,
                   containerPort: null
                 }
@@ -1079,7 +1105,10 @@ describe('Containers', function () {
                   name: null,
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: null
                 }
@@ -1127,7 +1156,10 @@ describe('Containers', function () {
                   name: 'foo',
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: null
                 }
@@ -1193,7 +1225,10 @@ describe('Containers', function () {
                   name: 'foo',
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: null
                 }
@@ -1223,8 +1258,9 @@ describe('Containers', function () {
                 0,
                 'endpoints',
                 0,
-                'protocol'
-              ], 'udp'));
+                'protocol',
+                'udp'
+              ], true));
 
           expect(batch.reduce(Containers.FormReducer.bind({})))
           .toEqual([
@@ -1242,7 +1278,10 @@ describe('Containers', function () {
                   name: null,
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'udp',
+                  protocol: {
+                    tcp: true,
+                    udp: true
+                  },
                   servicePort: null,
                   containerPort: null
                 }
@@ -1271,8 +1310,9 @@ describe('Containers', function () {
                 0,
                 'endpoints',
                 0,
-                'protocol'
-              ], 'foo'));
+                'protocol',
+                'foo'
+              ], true));
 
           expect(batch.reduce(Containers.FormReducer.bind({})))
           .toEqual([
@@ -1290,7 +1330,11 @@ describe('Containers', function () {
                   name: null,
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'foo',
+                  protocol: {
+                    foo: true,
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: null
                 }
@@ -1338,7 +1382,10 @@ describe('Containers', function () {
                   name: null,
                   loadBalanced: false,
                   vip: null,
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: 8080
                 }
@@ -1396,7 +1443,10 @@ describe('Containers', function () {
                   name: null,
                   loadBalanced: true,
                   vip: null,
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: 8080
                 }
@@ -1463,7 +1513,10 @@ describe('Containers', function () {
                   name: null,
                   loadBalanced: true,
                   vip: '1.3.3.7:8080',
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: 8080
                 }
@@ -1523,7 +1576,10 @@ describe('Containers', function () {
                   name: null,
                   loadBalanced: true,
                   vip: null,
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null,
                   containerPort: 8080
                 }
@@ -1593,7 +1649,10 @@ describe('Containers', function () {
                   loadBalanced: true,
                   containerPort: 8080,
                   vip: '1.3.3.7:8080',
-                  protocol: 'tcp',
+                  protocol: {
+                    tcp: true,
+                    udp: false
+                  },
                   servicePort: null
                 }
               ]
