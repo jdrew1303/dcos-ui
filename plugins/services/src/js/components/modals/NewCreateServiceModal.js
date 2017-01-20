@@ -3,19 +3,24 @@ import {Hooks} from 'PluginSDK';
 import React, {Component, PropTypes} from 'react';
 import {routerShape} from 'react-router';
 
-import Application from '../../structs/Application';
+import ApplicationSpec from '../../structs/ApplicationSpec';
 import PodSpec from '../../structs/PodSpec';
 
 import {DEFAULT_APP_SPEC} from '../../constants/DefaultApp';
 import {DEFAULT_POD_SPEC} from '../../constants/DefaultPod';
 
+import AppValidators from '../../../../../../src/resources/raml/marathon/v2/types/app.raml';
+import CreateServiceJsonOnly from './CreateServiceJsonOnly';
+import DataValidatorUtil from '../../../../../../src/js/utils/DataValidatorUtil';
 import FullScreenModal from '../../../../../../src/js/components/modals/FullScreenModal';
 import FullScreenModalHeader from '../../../../../../src/js/components/modals/FullScreenModalHeader';
 import FullScreenModalHeaderActions from '../../../../../../src/js/components/modals/FullScreenModalHeaderActions';
 import FullScreenModalHeaderTitle from '../../../../../../src/js/components/modals/FullScreenModalHeaderTitle';
+import MarathonAppValidators from '../../validators/MarathonAppValidators';
+import MarathonErrorUtil from '../../utils/MarathonErrorUtil';
 import NewCreateServiceModalServicePicker from './NewCreateServiceModalServicePicker';
 import NewCreateServiceModalForm from './NewCreateServiceModalForm';
-import CreateServiceJsonOnly from './CreateServiceJsonOnly';
+import PodValidators from '../../../../../../src/resources/raml/marathon/v2/types/pod.raml';
 import Service from '../../structs/Service';
 import ServiceConfigDisplay from '../../service-configuration/ServiceConfigDisplay';
 import ServiceUtil from '../../utils/ServiceUtil';
@@ -41,14 +46,25 @@ const METHODS_TO_BIND = [
   'handleConvertToPod',
   'handleJSONToggle',
   'handleServiceChange',
-  'handleServiceErrorChange',
+  'handleServiceErrorsChange',
   'handleServiceReview',
   'handleServiceRun',
   'handleServiceSelection',
   'handleTabChange'
 ];
 
-class NewServiceFormModal extends Component {
+const APP_ERROR_VALIDATORS = [
+  AppValidators.App,
+  MarathonAppValidators.containsCmdArgsOrContainer,
+  MarathonAppValidators.complyWithResidencyRules,
+  MarathonAppValidators.complyWithIpAddressRules
+];
+
+const POD_ERROR_VALIDATORS = [
+  PodValidators.Pod
+];
+
+class NewCreateServiceModal extends Component {
   constructor() {
     super(...arguments);
 
@@ -170,8 +186,8 @@ class NewServiceFormModal extends Component {
     this.setState({serviceConfig: newService});
   }
 
-  handleServiceErrorChange(hasErrors) {
-    this.setState({serviceFormHasErrors: hasErrors});
+  handleServiceErrorsChange(errors) {
+    this.setState({serviceFormErrors: errors});
   }
 
   handleServiceSelection({route, type}) {
@@ -181,7 +197,7 @@ class NewServiceFormModal extends Component {
         this.setState({
           servicePickerActive: false,
           serviceFormActive: true,
-          serviceConfig: new Application(
+          serviceConfig: new ApplicationSpec(
             Object.assign(
               {id: this.props.service.getId()},
               DEFAULT_APP_SPEC
@@ -207,7 +223,7 @@ class NewServiceFormModal extends Component {
         this.setState({
           servicePickerActive: false,
           serviceJsonActive: true,
-          serviceConfig: this.props.service
+          serviceConfig: this.props.service.getSpec()
         });
         break;
 
@@ -219,9 +235,13 @@ class NewServiceFormModal extends Component {
   }
 
   handleServiceReview() {
-    if (this.createComponent && this.createComponent.validateCurrentState()) {
-      this.handleServiceErrorChange(true);
-    } else {
+    // if (this.createComponent && this.createComponent.validateCurrentState()) {
+    //   this.handleServiceErrorsChange(true);
+    // } else {
+    //   this.setState({serviceReviewActive: true});
+    // }
+    const errors = this.getAllErrors();
+    if (errors.length === 0) {
       this.setState({serviceReviewActive: true});
     }
   }
@@ -232,6 +252,42 @@ class NewServiceFormModal extends Component {
       service,
       this.state.serviceConfig,
       this.shouldForceSubmit()
+    );
+  }
+
+  /**
+   * This function combines the errors received from marathon and the errors
+   * produced by the form into a unified error array
+   *
+   * @returns {Array} - An array of error objects
+   */
+  getAllErrors() {
+    const {serviceFormErrors, serviceConfig} = this.state;
+    const {errors} = this.props;
+    let validationErrors = [];
+
+    // Validate Application or Pod according to the contents
+    // of the serviceConfig property.
+
+    if (serviceConfig instanceof ApplicationSpec) {
+      validationErrors = DataValidatorUtil.validate(
+        ServiceUtil.getServiceJSON(serviceConfig),
+        APP_ERROR_VALIDATORS
+      );
+    }
+
+    if (serviceConfig instanceof PodSpec) {
+      validationErrors = DataValidatorUtil.validate(
+        ServiceUtil.getServiceJSON(serviceConfig),
+        POD_ERROR_VALIDATORS
+      );
+    }
+
+    // Combine all errors
+    return [].concat(
+      MarathonErrorUtil.parseErrors(errors),
+      serviceFormErrors,
+      validationErrors
     );
   }
 
@@ -292,32 +348,6 @@ class NewServiceFormModal extends Component {
       serviceReviewActive
     } = this.state;
 
-    let errorsMap = new Map();
-    if (this.props.errors) {
-      let message = this.props.errors.message;
-
-      if (this.shouldForceSubmit()) {
-        message = `App is currently locked by one or more deployments.
-         Press the button again to forcefully change and deploy the
-         new configuration.`;
-      }
-      errorsMap.set('/', [message]);
-
-      if (this.props.errors.details) {
-        this.props.errors.details.forEach(function ({errors, path}) {
-          const existingMessages = errorsMap.get(path);
-
-          let messages = errors;
-
-          if (existingMessages) {
-            messages = messages.concat(existingMessages);
-          }
-
-          errorsMap.set(path, messages);
-        });
-      }
-    }
-
     // NOTE: Always prioritize review screen check
     if (serviceReviewActive) {
       return (
@@ -327,7 +357,7 @@ class NewServiceFormModal extends Component {
               onEditClick={this.handleGoBack}
               appConfig={serviceConfig}
               clearError={this.props.clearError}
-              errors={errorsMap} />
+              errors={this.getAllErrors()} />
           </div>
         </div>
       );
@@ -379,6 +409,7 @@ class NewServiceFormModal extends Component {
       return (
         <NewCreateServiceModalForm
           activeTab={this.state.activeTab}
+          errors={this.getAllErrors()}
           jsonParserReducers={jsonParserReducers}
           jsonConfigReducers={jsonConfigReducers}
           handleTabChange={this.handleTabChange}
@@ -390,7 +421,7 @@ class NewServiceFormModal extends Component {
           service={serviceConfig}
           onChange={this.handleServiceChange}
           onConvertToPod={this.handleConvertToPod}
-          onErrorStateChange={this.handleServiceErrorChange}
+          onErrorsChange={this.handleServiceErrorsChange}
           isEdit={isEdit} />
       );
     }
@@ -398,12 +429,13 @@ class NewServiceFormModal extends Component {
     if (serviceJsonActive) {
       return (
         <CreateServiceJsonOnly
+          errors={this.getAllErrors()}
+          onChange={this.handleServiceChange}
+          onErrorsChange={this.handleServiceErrorsChange}
           ref={(ref) => {
             return this.createComponent = ref;
           }}
-          service={serviceConfig}
-          onChange={this.handleServiceChange}
-          onErrorStateChange={this.handleServiceErrorChange} />
+          service={serviceConfig} />
       );
     }
 
@@ -441,6 +473,8 @@ class NewServiceFormModal extends Component {
     }
 
     if (serviceFormActive) {
+      const errors = this.getAllErrors();
+
       return [
         {
           node: (
@@ -457,18 +491,20 @@ class NewServiceFormModal extends Component {
         {
           className: 'button-primary flush-vertical',
           clickHandler: this.handleServiceReview,
-          disabled: this.state.serviceFormHasErrors,
+          disabled: errors.length !== 0,
           label: 'Review & Run'
         }
       ];
     }
 
     if (serviceJsonActive) {
+      const errors = this.getAllErrors();
+
       return [
         {
           className: 'button-primary flush-vertical',
           clickHandler: this.handleServiceReview,
-          disabled: this.state.serviceFormHasErrors,
+          disabled: errors.length !== 0,
           label: 'Review & Run'
         }
       ];
@@ -482,6 +518,7 @@ class NewServiceFormModal extends Component {
       activeTab: null,
       isJSONModeActive: false,
       serviceConfig: nextProps.service.getSpec(),
+      serviceFormErrors: [],
       serviceFormActive: false,
       serviceJsonActive: false,
       servicePickerActive: true,
@@ -537,7 +574,7 @@ class NewServiceFormModal extends Component {
           header={this.getHeader()}
           onClose={this.handleClose}
           useGemini={useGemini}
-          {...Util.omit(props, Object.keys(NewServiceFormModal.propTypes))}>
+          {...Util.omit(props, Object.keys(NewCreateServiceModal.propTypes))}>
           {this.getModalContent()}
         </FullScreenModal>
       </div>
@@ -545,11 +582,11 @@ class NewServiceFormModal extends Component {
   }
 }
 
-NewServiceFormModal.contextTypes = {
+NewCreateServiceModal.contextTypes = {
   router: routerShape
 };
 
-NewServiceFormModal.propTypes = {
+NewCreateServiceModal.propTypes = {
   clearError: PropTypes.func.isRequired,
   errors: PropTypes.oneOfType([
     PropTypes.object,
@@ -562,4 +599,4 @@ NewServiceFormModal.propTypes = {
   service: PropTypes.instanceOf(Service).isRequired
 };
 
-module.exports = NewServiceFormModal;
+module.exports = NewCreateServiceModal;

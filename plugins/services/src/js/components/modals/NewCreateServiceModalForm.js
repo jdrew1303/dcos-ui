@@ -6,8 +6,6 @@ import {findNestedPropertyInObject} from '../../../../../../src/js/utils/Util';
 import {getContainerNameWithIcon} from '../../utils/ServiceConfigDisplayUtil';
 import {pluralize} from '../../../../../../src/js/utils/StringUtil';
 import Alert from '../../../../../../src/js/components/Alert';
-import AppValidators from '../../../../../../src/resources/raml/marathon/v2/types/app.raml';
-import PodValidators from '../../../../../../src/resources/raml/marathon/v2/types/pod.raml';
 import Batch from '../../../../../../src/js/structs/Batch';
 import CreateServiceModalFormUtil from '../../utils/CreateServiceModalFormUtil';
 import DataValidatorUtil from '../../../../../../src/js/utils/DataValidatorUtil';
@@ -23,7 +21,6 @@ import MultiContainerNetworkingFormSection from '../forms/MultiContainerNetworki
 import MultiContainerVolumesFormSection from '../forms/MultiContainerVolumesFormSection';
 import ServiceUtil from '../../utils/ServiceUtil';
 import PodSpec from '../../structs/PodSpec';
-import MarathonAppValidators from '../../validators/MarathonAppValidators';
 import TabButton from '../../../../../../src/js/components/TabButton';
 import TabButtonList from '../../../../../../src/js/components/TabButtonList';
 import Tabs from '../../../../../../src/js/components/Tabs';
@@ -48,18 +45,6 @@ const KEY_VALUE_FIELDS = [
   'labels'
 ];
 
-const APP_ERROR_VALIDATORS = [
-  AppValidators.App,
-  MarathonAppValidators.containsCmdArgsOrContainer,
-  MarathonAppValidators.complyWithResidencyRules,
-  MarathonAppValidators.complyWithIpAddressRules,
-  MarathonAppValidators.mustNotContainUris
-];
-
-const POD_ERROR_VALIDATORS = [
-  PodValidators.Pod
-];
-
 class NewCreateServiceModalForm extends Component {
   constructor() {
     super(...arguments);
@@ -69,7 +54,6 @@ class NewCreateServiceModalForm extends Component {
         appConfig: null,
         batch: new Batch(),
         baseConfig: {},
-        errorList: [],
         isPod: false,
         jsonReducer() {},
         jsonParser() {}
@@ -114,7 +98,7 @@ class NewCreateServiceModalForm extends Component {
    */
   componentDidUpdate() {
     this.props.onChange(new this.props.service.constructor(this.state.appConfig));
-    this.props.onErrorStateChange(this.state.errorList.length !== 0);
+    // this.props.onErrorStateChange(this.state.errorList.length !== 0);
   }
 
   /**
@@ -145,10 +129,10 @@ class NewCreateServiceModalForm extends Component {
     }
 
     // Otherwise update if the state has changed
-    return (this.state.errorList !== nextState.errorList) ||
-      (this.state.baseConfig !== nextState.baseConfig) ||
+    return (this.state.baseConfig !== nextState.baseConfig) ||
       (this.state.batch !== nextState.batch) ||
-      (this.props.activeTab !== nextProps.activeTab);
+      (this.props.activeTab !== nextProps.activeTab) ||
+      (!deepEqual(this.props.errors, nextProps.errors));
   }
 
   getNewStateForJSON(baseConfig = {},
@@ -167,19 +151,6 @@ class NewCreateServiceModalForm extends Component {
       new Batch()
     );
 
-    let ERROR_VALIDATORS = APP_ERROR_VALIDATORS;
-
-    if (isPod) {
-      ERROR_VALIDATORS = POD_ERROR_VALIDATORS;
-    }
-
-    if (shouldValidate) {
-      newState.errorList = DataValidatorUtil.validate(
-        baseConfig,
-        ERROR_VALIDATORS
-      );
-    }
-
     // Update appConfig
     newState.appConfig = this.getAppConfig(newState.batch, baseConfig);
 
@@ -197,7 +168,7 @@ class NewCreateServiceModalForm extends Component {
     }
 
     // Run data validation on the raw data
-    this.validateCurrentState();
+    // this.validateCurrentState();
   }
 
   handleFormChange(event) {
@@ -217,12 +188,12 @@ class NewCreateServiceModalForm extends Component {
     this.setState({
       // Render the new appconfig
       appConfig: this.getAppConfig(batch),
-      batch,
-      // [Case F1] Reset errors only on the current field
-      errorList: DataValidatorUtil.stripErrorsOnPath(
-        this.state.errorList,
-        path
-      )
+      batch
+      // // [Case F1] Reset errors only on the current field
+      // errorList: DataValidatorUtil.stripErrorsOnPath(
+      //   this.state.errorList,
+      //   path
+      // )
     });
   }
 
@@ -246,13 +217,13 @@ class NewCreateServiceModalForm extends Component {
     this.setState({batch, appConfig: this.getAppConfig(batch)});
   }
 
-  validateCurrentState() {
-    const {errorList} = this.getNewStateForJSON(this.getAppConfig());
+  // validateCurrentState() {
+  //   const {errorList} = this.getNewStateForJSON(this.getAppConfig());
 
-    this.setState({errorList});
+  //   this.setState({errorList});
 
-    return Boolean(errorList.length);
-  }
+  //   return Boolean(errorList.length);
+  // }
 
   getAppConfig(batch = this.state.batch, baseConfig = this.state.baseConfig) {
     // Delete all key:value fields
@@ -265,22 +236,33 @@ class NewCreateServiceModalForm extends Component {
     return CreateServiceModalFormUtil.applyPatch(baseConfig, patch);
   }
 
-  getRootErrorMessage() {
-    const rootErrors = this.state.errorList.reduce(function (errors, error) {
-      if (error.path.length !== 0) {
-        return errors;
-      }
+  getRootErrors() {
+    const errors = this.props.errors.filter(function (error) {
+      return error.path.length === 0;
+    });
 
-      errors.push(<Alert>{error.message}</Alert>);
-
-      return errors;
-    }, []);
-
-    if (rootErrors.length === 0) {
+    if (errors.length === 0) {
       return null;
     }
 
-    return rootErrors;
+    return (
+      <Alert>
+        <strong>There is an error with your configuration</strong>
+        <div className="pod pod-narrower-left pod-shorter-top flush-bottom">
+          <ul className="list-unstyled short flush-bottom">
+          {errors.map((error, index) => {
+            const prefix = error.path.length ? `${error.path.join('.')}:` : '';
+
+            return (
+              <li key={index} className="short">
+                {`\u2022 ${prefix} ${error.message}`}
+              </li>
+            );
+          })}
+          </ul>
+        </div>
+      </Alert>
+    );
   }
 
   getContainerList(data) {
@@ -303,7 +285,7 @@ class NewCreateServiceModalForm extends Component {
 
   getContainerContent(data, errors) {
     const {containers} = data;
-    const rootErrorComponent = this.getRootErrorMessage();
+    const rootErrorComponent = this.getRootErrors();
 
     if (containers == null) {
       return [];
@@ -345,7 +327,7 @@ class NewCreateServiceModalForm extends Component {
   }
 
   getSectionContent(data, errorMap) {
-    const rootErrorComponent = this.getRootErrorMessage();
+    const rootErrorComponent = this.getRootErrors();
 
     if (this.state.isPod) {
       return [
@@ -425,8 +407,8 @@ class NewCreateServiceModalForm extends Component {
   }
 
   render() {
-    const {appConfig, batch, errorList} = this.state;
-    const {activeTab, handleTabChange, isJSONModeActive, isEdit, onConvertToPod, service} = this.props;
+    const {appConfig, batch} = this.state;
+    const {activeTab, errors, handleTabChange, isJSONModeActive, isEdit, onConvertToPod, service} = this.props;
     const data = batch.reduce(this.props.inputConfigReducers, {});
 
     const jsonEditorPlaceholderClasses = classNames(
@@ -437,8 +419,8 @@ class NewCreateServiceModalForm extends Component {
       'is-visible': isJSONModeActive
     });
 
-    const errorMap = DataValidatorUtil.errorArrayToMap(errorList);
-    const rootErrorComponent = this.getRootErrorMessage();
+    const errorMap = DataValidatorUtil.errorArrayToMap(errors);
+    const rootErrorComponent = this.getRootErrors();
     const serviceLabel = pluralize('Service', findNestedPropertyInObject(
       appConfig,
       'containers.length'
@@ -484,7 +466,7 @@ class NewCreateServiceModalForm extends Component {
         <div className={jsonEditorPlaceholderClasses} />
         <div className={jsonEditorClasses}>
           <JSONEditor
-            errors={errorList}
+            errors={errors}
             onChange={this.handleJSONChange}
             showGutter={true}
             showPrintMargin={false}
@@ -499,6 +481,7 @@ class NewCreateServiceModalForm extends Component {
 }
 
 NewCreateServiceModalForm.defaultProps = {
+  errors: [],
   handleTabChange() {},
   isJSONModeActive: false,
   onChange() {},
@@ -507,6 +490,7 @@ NewCreateServiceModalForm.defaultProps = {
 
 NewCreateServiceModalForm.propTypes = {
   activeTab: PropTypes.string,
+  errors: PropTypes.array,
   handleTabChange: PropTypes.func,
   isJSONModeActive: PropTypes.bool,
   onChange: PropTypes.func,
