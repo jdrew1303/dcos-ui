@@ -21,6 +21,7 @@ import MultiContainerHealthChecksFormSection from '../forms/MultiContainerHealth
 import MultiContainerNetworkingFormSection from '../forms/MultiContainerNetworkingFormSection';
 import MultiContainerVolumesFormSection from '../forms/MultiContainerVolumesFormSection';
 import ServiceErrorMessages from '../../constants/ServiceErrorMessages';
+import ServiceErrorPathMapping from '../../constants/ServiceErrorPathMapping';
 import ServiceUtil from '../../utils/ServiceUtil';
 import PodSpec from '../../structs/PodSpec';
 import TabButton from '../../../../../../src/js/components/TabButton';
@@ -291,11 +292,12 @@ class NewCreateServiceModalForm extends Component {
         <div className="pod pod-narrower-left pod-shorter-top flush-bottom">
           <ul className="list-unstyled short flush-bottom">
           {showErrors.map((error, index) => {
-            const prefix = error.path.length ? `${error.path.join('.')}:` : '';
+            const message = ErrorMessageUtil.getUnanchoredErrorMessage(
+              error, ServiceErrorPathMapping);
 
             return (
               <li key={index} className="short">
-                {`\u2022 ${prefix} ${error.message}`}
+                {`\u2022 ${message}`}
               </li>
             );
           })}
