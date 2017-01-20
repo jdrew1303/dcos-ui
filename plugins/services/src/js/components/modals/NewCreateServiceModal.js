@@ -33,6 +33,7 @@ import HealthChecksFormSection from '../forms/HealthChecksFormSection';
 import NetworkingFormSection from '../forms/NetworkingFormSection';
 import MultiContainerNetworkingFormSection from '../forms/MultiContainerNetworkingFormSection';
 import MultiContainerVolumesFormSection from '../forms/MultiContainerVolumesFormSection';
+import ValidatorUtil from '../../../../../../src/js/utils/ValidatorUtil';
 import VolumesFormSection from '../forms/VolumesFormSection';
 import {combineParsers} from '../../../../../../src/js/utils/ParserUtil';
 import {combineReducers} from '../../../../../../src/js/utils/ReducerUtil';
@@ -42,6 +43,7 @@ import JSONParser from '../../reducers/JSONParser';
 
 const METHODS_TO_BIND = [
   'handleGoBack',
+  'handleClearErrors',
   'handleClose',
   'handleConvertToPod',
   'handleJSONToggle',
@@ -174,6 +176,11 @@ class NewCreateServiceModal extends Component {
     this.setState(this.getResetState());
   }
 
+  handleClearErrors() {
+    this.props.clearError();
+    this.setState({showAllErrors: false});
+  }
+
   handleConvertToPod() {
     this.handleServiceSelection({type: 'pod'});
   }
@@ -183,7 +190,15 @@ class NewCreateServiceModal extends Component {
   }
 
   handleServiceChange(newService) {
-    this.setState({serviceConfig: newService});
+    const {errors} = this.props;
+    if (!ValidatorUtil.isEmpty(errors)) {
+      this.props.clearError();
+    }
+
+    this.setState({
+      serviceConfig: newService,
+      showAllErrors: false
+    });
   }
 
   handleServiceErrorsChange(errors) {
@@ -235,14 +250,11 @@ class NewCreateServiceModal extends Component {
   }
 
   handleServiceReview() {
-    // if (this.createComponent && this.createComponent.validateCurrentState()) {
-    //   this.handleServiceErrorsChange(true);
-    // } else {
-    //   this.setState({serviceReviewActive: true});
-    // }
     const errors = this.getAllErrors();
     if (errors.length === 0) {
       this.setState({serviceReviewActive: true});
+    } else {
+      this.setState({showAllErrors: true});
     }
   }
 
@@ -356,7 +368,6 @@ class NewCreateServiceModal extends Component {
             <ServiceConfigDisplay
               onEditClick={this.handleGoBack}
               appConfig={serviceConfig}
-              clearError={this.props.clearError}
               errors={this.getAllErrors()} />
           </div>
         </div>
@@ -371,7 +382,8 @@ class NewCreateServiceModal extends Component {
     }
 
     if (serviceFormActive) {
-      let {isEdit} = this.props;
+      const {isEdit} = this.props;
+      const {showAllErrors} = this.state;
 
       const SECTIONS = [
         ContainerServiceFormSection,
@@ -414,15 +426,16 @@ class NewCreateServiceModal extends Component {
           jsonConfigReducers={jsonConfigReducers}
           handleTabChange={this.handleTabChange}
           inputConfigReducers={inputConfigReducers}
+          isEdit={isEdit}
           isJSONModeActive={isJSONModeActive}
           ref={(ref) => {
             return this.createComponent = ref;
           }}
-          service={serviceConfig}
           onChange={this.handleServiceChange}
           onConvertToPod={this.handleConvertToPod}
           onErrorsChange={this.handleServiceErrorsChange}
-          isEdit={isEdit} />
+          service={serviceConfig}
+          showAllErrors={showAllErrors} />
       );
     }
 
@@ -473,7 +486,7 @@ class NewCreateServiceModal extends Component {
     }
 
     if (serviceFormActive) {
-      const errors = this.getAllErrors();
+      // const errors = this.getAllErrors();
 
       return [
         {
@@ -491,20 +504,22 @@ class NewCreateServiceModal extends Component {
         {
           className: 'button-primary flush-vertical',
           clickHandler: this.handleServiceReview,
-          disabled: errors.length !== 0,
+          disabled: false,
+          // disabled: errors.length !== 0,
           label: 'Review & Run'
         }
       ];
     }
 
     if (serviceJsonActive) {
-      const errors = this.getAllErrors();
+      // const errors = this.getAllErrors();
 
       return [
         {
           className: 'button-primary flush-vertical',
           clickHandler: this.handleServiceReview,
-          disabled: errors.length !== 0,
+          disabled: false,
+          // disabled: errors.length !== 0,
           label: 'Review & Run'
         }
       ];
@@ -523,7 +538,8 @@ class NewCreateServiceModal extends Component {
       serviceJsonActive: false,
       servicePickerActive: true,
       serviceReviewActive: false,
-      serviceFormHasErrors: false
+      serviceFormHasErrors: false,
+      showAllErrors: false
     };
 
     // Switch directly to form/json if edit

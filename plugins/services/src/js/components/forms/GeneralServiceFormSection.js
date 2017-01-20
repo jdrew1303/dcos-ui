@@ -88,7 +88,7 @@ class GeneralServiceFormSection extends Component {
       return (
         <ContainerServiceFormSection
           data={data}
-          errors={errors.container}
+          errors={errors}
           onAddItem={this.props.onAddItem}
           onRemoveItem={this.props.onRemoveItem} />
       );
