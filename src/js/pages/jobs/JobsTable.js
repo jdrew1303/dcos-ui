@@ -192,7 +192,7 @@ class JobsTable extends React.Component {
 
     if (lastSuccessAt != null) {
       nodes.push(
-        <p className="flush-bottom" key="tooltip-success-at">
+        <p className="flush-bottom tooltip-inner-content" key="tooltip-success-at">
           <span className="text-success">Last Success: </span>
           {new Date(lastSuccessAt).toLocaleString()}
         </p>
@@ -201,7 +201,7 @@ class JobsTable extends React.Component {
 
     if (lastFailureAt != null) {
       nodes.push(
-        <p className="flush-bottom" key="tooltip-failure-at">
+        <p className="flush-bottom tooltip-inner-content" key="tooltip-failure-at">
           <span className="text-danger">Last Failure: </span>
           {new Date(lastFailureAt).toLocaleString()}
         </p>

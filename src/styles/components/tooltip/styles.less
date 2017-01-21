@@ -25,6 +25,12 @@
         padding-bottom: @base-spacing-unit / 6;
         padding-top: @base-spacing-unit / 6;
       }
+
+      // Provides an extra level of specificity to override cnvs defaults
+      .tooltip-inner-content {
+        color: @white;
+        font-size: @tooltip-font-size;
+      }
     }
   }
 }
